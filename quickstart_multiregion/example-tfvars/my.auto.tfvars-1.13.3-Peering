@@ -1,0 +1,10 @@
+# The first region defined will host the primary consul cluster
+regions              = ["eastus", "westus2"]
+region_cidr_list     = ["172.16.0.0/16", "172.17.0.0/16"]
+resource_name_prefix = "presto"
+create_consul_tf     = true
+consul_node_count    = 3
+consul_version       = "1.13.3"
+consul_helm_chart_version  = "0.49.0"
+consul_helm_chart_template = "values-peer-cluster-0.49.0.yaml"
+enable_cluster_peering    = true

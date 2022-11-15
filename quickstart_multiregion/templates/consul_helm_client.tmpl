@@ -1,0 +1,25 @@
+#provider "azurerm" {
+#  features {}
+#}
+
+module "consul_${cluster_name}" {
+  source   = "../modules/helm_install"
+  release_name  = "${release_name}"
+  chart_name         = "${consul_chart_name}"
+  azure_key_vault_id   = "${key_vault_id}"
+  azure_key_vault_name = "${key_vault_name}"
+  key_vault_resource_group_name = "${key_vault_resource_group_name}"
+  resource_group_name  = "${azurerm_resource_group}"
+  cluster_name         = "${cluster_name}"
+  datacenter           = "${datacenter}"
+  server_replicas      = 3
+  consul_version       = "${consul_version}"
+  consul_license       = file("../files/consul.lic")
+  enable_cluster_peering     = ${enable_cluster_peering}
+  consul_helm_chart_template = "${consul_helm_chart_template}"
+  consul_helm_chart_version  = "${consul_helm_chart_version}"
+  consul_external_servers    = "172.16.2.11" #REPLACE WITH "${datacenter}" k8s svc 'consul-expose-servers' EXT IP
+  primary_datacenter         = true
+  client                     = true
+  }
+

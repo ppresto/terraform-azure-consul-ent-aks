@@ -1,0 +1,54 @@
+global:
+  enabled: false
+  logLevel: "debug"
+  name: ${cluster_name}
+  datacenter: ${datacenter}
+  image: "hashicorppreview/consul-enterprise:1.14-dev"
+
+  enableConsulNamespaces: true
+  adminPartitions:
+    enabled: true
+    name: "shared"
+  acls:
+    manageSystemACLs: true
+    bootstrapToken:
+      secretName: consul-bootstrap-acl-token
+      secretKey: token
+  tls:
+    enabled: true
+    caCert:
+      secretName: consul-ca-cert
+      secretKey: tls.crt
+
+externalServers:
+  enabled: true
+  hosts: ["${consul_external_servers}"]
+  tlsServerName: "server.${datacenter}.consul"
+  httpsPort: 8501
+  grpcPort: 8502
+  useSystemRoots: false
+  k8sAuthMethodHost: ${aks_cluster}
+
+server:
+  enabled: false
+
+connectInject:
+  transparentProxy:
+    defaultEnabled: true
+  enabled: true
+  default: true
+  consulNode:
+    meta: 
+      node: "${cluster_name}-agentless-node"
+
+controller:
+  enabled: true
+
+ingressGateways:
+  enabled: true
+  defaults:
+    replicas: 1
+  gateways:
+    - name: ingress-gateway
+      service:
+        type: LoadBalancer

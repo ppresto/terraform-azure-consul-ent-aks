@@ -1,0 +1,64 @@
+global:
+  name: consul
+  image: "hashicorppreview/consul-enterprise:1.14-dev"
+  enableConsulNamespaces: true
+  enterpriseLicense:
+    secretName: 'consul-ent-license'
+    secretKey: 'key'
+    enableLicenseAutoload: true
+  datacenter: consul0-eastus
+  peering:
+    enabled: true
+  adminPartitions:
+    enabled: true
+    name: "default"
+
+  # TLS configures whether Consul components use TLS.
+  tls:
+    enabled: true
+    # In Prod create a dns name for consul server pods and add to TLS Certificat SAN
+    # serverAdditionalDNSSANs: []
+    serverAdditionalIPSANs: ["172.16.2.10","172.16.2.11","172.16.2.12"]
+  acls:
+    manageSystemACLs: true
+
+server:
+ replicas: 3
+ bootstrapExpect: 3
+ exposeService:
+    # When enabled, deploys a Kubernetes Service to reach the Consul servers.
+    # @type: boolean
+    enabled: true
+    type: LoadBalancer
+    annotations: |
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+
+ extraConfig: |
+   {
+     "log_level": "TRACE"
+   }
+
+connectInject:
+  enabled: true
+  transparentProxy:
+    defaultEnabled: false
+  consulNamespaces:
+    mirroringK8S: true
+
+meshGateway:
+  enabled: true
+  replicas: 3
+  service:
+    enabled: true
+    type: LoadBalancer
+    annotations: |
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+
+controller:
+  enabled: true
+
+ui:
+  enabled: true
+  service:
+    enabled: true
+    type: LoadBalancer
