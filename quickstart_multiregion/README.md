@@ -4,10 +4,9 @@ The quickstart directory provides example code that will create two resource gro
 
 ## How to Use This Repo
 
-- Ensure you have installed the [Azure
-  CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) and are able to [authenticate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) to your account.
+- Ensure you have installed the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) and are able to [authenticate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) to your account.
   - [Owner](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner) role or equivalent is required.
-
+- Install [Terraform 1.2+](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli) to provision Azure infrastructure
 - Install [kubectl](https://kubernetes.io/docs/reference/kubectl/)
 
 ## Required Variables
@@ -21,7 +20,7 @@ you may select another region from the list provided and update the `./quickstar
 [here](https://azure.microsoft.com/en-us/global-infrastructure/geographies/#geographies).
 
 ### Sample [my.auto.tfvars](./quickstart_multiregion/my.auto.tfvars)
-Do not use in production.  This example is using a path of a cloned consul-k8s repo for `consul_chart_name`  to build a configuration that will run the latest dev helm chart not yet released.  Replace this path with `consul` to use a released version.  Additional example architecture builds are in `./example-tfvars`.
+Do not use in production.  This example is using a path of a cloned consul-k8s repo for `consul_chart_name`  to build a configuration that will run the latest dev helm chart not yet released.  For stability replace this path with `consul` and then define a chart version with `consul_helm_chart_version`.  Additional example my.auto.tfvar files are in `./example-tfvars`.
 
 ```
 regions              = ["eastus", "westus2"]
@@ -50,7 +49,16 @@ The AKS clusters will be built with kubenet networking which is the Azure defaul
 source         = "../modules/aks-kubenet/"
 ```
 
-Build the AKS clusters with the following commands:
+### Setup Env
+Export the requird ARM environment variables with your subscription id information.  Terraform will use these variables in your current working environment for authN/authZ.
+```
+export ARM_SUBSCRIPTION_ID=<input>
+export ARM_CLIENT_SECRET=<input>
+export ARM_TENANT_ID=<input>
+export ARM_CLIENT_ID=<input>
+```
+
+### Build the AKS clusters with Terraform
 ```
 cd ./quickstart_multiregion
 terraform init
@@ -59,7 +67,7 @@ terraform apply -auto-approve
 
 ## Connect to AKS clusters to run kubectl
 
-If you want to run `kubectl` commands against your cluster, be sure to update your kubeconfig with the Azure CLI. Source the `./kubectl_connect.sh` script to update kubeconfig and also apply aliase for switching context's quickly and accessing the default namespaces being created by region.
+If you want to run `kubectl` commands against your cluster, be sure to update your kubeconfig with the Azure CLI. Source the `./kubectl_connect.sh` script to update kubeconfig and also apply aliases to your working environment.  These aliases help switching AKS context's quickly and accessing the different k8s namespaces that are being created by region+az.
 
 ```shell
 source ./kubectl_connect.sh
@@ -104,16 +112,23 @@ $ kubectl config use-context "<your cluster name>"
 ```
 
 ## Verify AZ
-Once you are connected to both Consul AKS clusters you can verify the nodes are evenly spread across AZs.
+If you tested the aliases above then your current context should be consul0 which will be the AKS cluster hosting Consul servers in region eastus.  Now that you are connected, verify the nodes are evenly spread across AZs.  The default node count for the consul cluster is set to 3 and the target regions have 3 zones so they should be evenly spread across the zones.
+
+- `aks-consulpool` : consul servers will use this 3 node pool.
+- `aks-default`    : AKS services will use this 3 node pool.
 
 ```shell
-kubectl describe nodes | grep -e "Name:" -e "topology.kubernetes.io/zone"
-
 kubectl get nodes -o custom-columns=NAME:'{.metadata.name}',REGION:'{.metadata.labels.topology\.kubernetes\.io/region}',ZONE:'{metadata.labels.topology\.kubernetes\.io/zone}'
+
+NAME                                 REGION   ZONE
+aks-consulpool-12127614-vmss000000   eastus   eastus-2
+aks-consulpool-12127614-vmss000001   eastus   eastus-3
+aks-consulpool-12127614-vmss000002   eastus   eastus-1
+aks-default-32425529-vmss000000      eastus   eastus-2
+aks-default-32425529-vmss000001      eastus   eastus-3
+aks-default-32425529-vmss000002      eastus   eastus-1
 ```
-
 Read more on AZ [here](https://learn.microsoft.com/en-us/azure/aks/availability-zones).
-
 
 ## Complete
 At this point your Azure Infrastructure should be built and you are ready to plan out your Consul installation.  Go back to the `../README.md` in the base of the repo for next steps...

@@ -6,18 +6,18 @@
   - [Quickstart](#quickstart)
     - [License](#license)
     - [Consul Cluster Terraform](#consul-cluster-terraform)
-  - [Installing Consul Helm Chart - Primary](#installing-consul-helm-chart---primary)
-  - [Installing Consul Helm Chart - Client](#installing-consul-helm-chart---client)
-  - [Installing Consul Helm Chart - Secondary](#installing-consul-helm-chart---secondary)
-    - [Run Helm Manually](#run-helm-manually)
-  - [Kubectl](#kubectl)
+  - [Deploy Primary Consul clusters using Helm](#deploy-primary-consul-clusters-using-helm)
+    - [Kubectl - Validate Primary clusters via CLI](#kubectl---validate-primary-clusters-via-cli)
+    - [Consul UI - Validate Primary Consul clusters with the UI](#consul-ui---validate-primary-consul-clusters-with-the-ui)
+  - [Deploy Agentless Dataplane to AKS clusters using Helm](#deploy-agentless-dataplane-to-aks-clusters-using-helm)
+  - [WAN Federation Only - Deploy Secondary Consul clusters using Helm](#wan-federation-only---deploy-secondary-consul-clusters-using-helm)
     - [Verify WAN Federated Datacenters see each other](#verify-wan-federated-datacenters-see-each-other)
   - [Examples](#examples)
-  - [AKS DNS (Optional)](#aks-dns-optional)
+  - [AKS DNS Forwarding to Consul (Optional)](#aks-dns-forwarding-to-consul-optional)
   - [Troubleshooting](#troubleshooting)
-    - [AKS coredns](#aks-coredns)
-    - [DNS Troubleshooting](#dns-troubleshooting)
-    - [Helm Troubleshooting](#helm-troubleshooting)
+    - [DNS AKS coredns](#dns-aks-coredns)
+    - [DNS Consul](#dns-consul)
+    - [Helm](#helm)
       - [Primary Consul Cluster using main branch (latest development)](#primary-consul-cluster-using-main-branch-latest-development)
       - [Client Dataplane - AKS Cluster using beta version](#client-dataplane---aks-cluster-using-beta-version)
     - [CA Cert](#ca-cert)
@@ -37,13 +37,13 @@ This includes a Terraform module for provisioning two
   CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) and are able to [authenticate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) to your account.
 - [Owner](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner) role or equivalent is required.
 - Install [kubectl](https://kubernetes.io/docs/reference/kubectl/) (this will be used to verify Consul cluster federation status).
-- Use the [quickstart-multiregion](https://github.com/ppresto/terraform-azure-consul-ent-k8s/tree/main/quickstart-multiregion) terraform code to create the pre-reqs needed to install and federate or peer Consul across AKS regions and AKS clusters.  This will create the necessary RGs, VNETs, and AKS clusters across two regions.
+- Use the [quickstart-multiregion](https://github.com/ppresto/terraform-azure-consul-ent-aks/tree/main/quickstart-multiregion) terraform code to create the pre-reqs needed to install and federate or peer Consul across AKS regions and AKS clusters.  This will create the necessary RGs, VNETs, and AKS clusters across two regions.
 
 ## Quickstart
 Review [quickstart_multiregion/README.md](./quickstart_multiregion/README.md)
 Setup all Azure PreReqs using Terraform
 ```
-cd terraform-azure-consul-ent-k8s/quickstart_multiregion
+cd terraform-azure-consul-ent-aks/quickstart_multiregion
 ```
 
 ### License
@@ -52,10 +52,10 @@ After completing the PreReqs, copy your Consul ENT License to `./files/consul.li
 ### Consul Cluster Terraform
 When using `quickstart_multiregion` setting variable `create_consul_tf = true` will automatically create the required tf files that will use the helm provider to deploy Consul. 
 - `./consul-primary/auto-main.tf`    # Cluster Peering creates 1+ primaries
-- `./consul-secondary/auto-main.tf`  # WAN Federation Only
-- `./consul-clients/auto-main.tf`    # 1.14 Agentless dataplane on K8s
+- `./consul-secondary/auto-main.tf`  # Created with WAN Federation Only
+- `./consul-clients/auto-main.tf`    # Created for Agentless K8s clusters only
 
-## Installing Consul Helm Chart - Primary
+## Deploy Primary Consul clusters using Helm
 Run `terraform init` and `terraform apply` first in `./consul-primary` to set up your primary Consul cluster/s. Wait for the apply to complete before setting up any secondary or dataplane client clusters.  This will create the secrets required to bootstrap a secondary WAN federated cluster or dataplane client depending on your architecture.
 ```
 cd .. # Go to the base of the repo
@@ -63,8 +63,37 @@ cd consul-primary
 terraform init
 terraform apply -auto-approve
 ```
-## Installing Consul Helm Chart - Client
-If setting up a dataplane/agentless AKS cluster architecture run this section. 
+
+### Kubectl - Validate Primary clusters via CLI
+Connect to the AKS cluster and verify you can use kubectl.  If you missed this step in the `quickstart_multiregion` please source this script in your shell for AKS contexts and namespace aliases.
+```
+cd ../quickstart_multiregion
+source kubectl_connect.sh
+```
+Refer to the quickstart-multiregion [README.md](https://github.com/hashicorp/terraform-azure-consul-ent-aks/blob/main/examples/quickstart-multiregion/README.md) for more information or review the script to learn more about kubectl commands and the aliases it creates in your shell.
+
+```shell
+consul0  # switch context to the primary Consul cluster
+kc get pods # kc alias = kubectl -n consul
+kc exec -it consul-server-0 -- consul catalog services  # list services 
+```
+Consul resources are deployed into a `consul` k8s namespace.  use the `consul1` alias to switch to the primary cluster in the second region (westus2) and review pod READY status and the service catalog to verify the cluster is operational.
+
+### Consul UI - Validate Primary Consul clusters with the UI
+When installing Consul the helm values enabled the UI with an external LoadBalancer IP for easy access.  This is not recommended for production.  Use the following scripts to get the URL and login token for full access to each Consul cluster UI.
+```
+cd .. # Go to repo base
+examples/ui/get_consul0_ui_url.sh
+examples/ui/get_consul1_ui_url.sh
+```
+Both Consul clusters are setup the same. The upper left corner shows the consul datacenter name `consul0-eastus` or `consul1-westus2` that was configured in the helm values.  Go to the default Admin Partion, and Namespace to review the server.
+- Services:     See the core Consul services (consul, mesh-gateway).
+- Nodes:        The 3 nodes that make up the Consul cluster with leader identified
+- Auth Methods: The K8s API used to authenticate consul cluster services
+Check out the default policies, roles, and tokens that were created
+
+## Deploy Agentless Dataplane to AKS clusters using Helm
+If setting up a dataplane/agentless AKS cluster architecture run this section and skip the following section.
 
 Identify the two consul cluster external service IP addresses first.
 ```
@@ -81,13 +110,35 @@ Update the auto generated client files with their correct consul_external_server
 # example
 consul_external_servers    = "172.16.2.11"
 ```
-Once the tf files are updated with the proper IP, run `terraform init` and `terraform apply` in `./consul-clients` to bootstrap the AKS cluster to Consul. Once this is complete, you should have an agentless AKS cluster connected to Consul.  This will not show up in the UI.
+Once the tf files are updated with the proper IP, run `terraform init` and `terraform apply` in `./consul-clients` to bootstrap the AKS cluster to Consul. 
 ```
 cd ../consul-clients
 terraform init
 terraform apply -auto-approve
 ```
-## Installing Consul Helm Chart - Secondary
+Once this is complete, you should have an agentless AKS cluster connected to Consul.  Verify the dataplane is connected to the consul cluster and healthy.  Use the `aks0` alias to switch to the first regions agentless AKS cluster.  Then use the `kc` alias to see resources in the consul namespace.  The connect-injector pod's log should show a successful connection to consul0.
+```
+aks0
+kc get pods
+kc logs aks0-connect-injector | grep -i consul-server-connection-manager
+```
+
+Log output should look like this.
+```
+[INFO]  consul-server-connection-manager: trying to connect to a Consul server
+[INFO]  consul-server-connection-manager: discovered Consul servers: addresses=[172.16.2.11:8502]
+[INFO]  consul-server-connection-manager: current prioritized list of known Consul servers: addresses=[172.16.2.11:8502]
+[INFO]  consul-server-connection-manager: ACL auth method login succeeded
+[INFO]  consul-server-connection-manager: connected to Consul server: address=172.16.2.11:8502
+```
+
+The helm values used to deploy the Consul dataplane created a new partition and boostrapped the AKS cluster to it.  In the UI go to the Admin Partition drop down menu and select `shared`.  You should see 2 healthy services.
+- `ingress-gateway` is used to allow requests into the service mesh
+- `mesh-gateway` is used to extend the service mesh by connecting to remote partitions
+
+At this point, the Namespace drop down menu will only have the default.  This is because we haven't started any services in the AKS cluster within its own K8s namespace.  Once we start services in their own k8s namespace Consul will automatically create a 1/1 Consul namespace for the service providing it with extra adminstrative and service mesh capabilities.
+
+## WAN Federation Only - Deploy Secondary Consul clusters using Helm
 Skip this step if not setting up a WAN Federated architecture because you cant have secondary clusters.
 
 Run `terraform init` and `terraform apply` in `./consul-secondary` to set up your secondary Consul cluster. Once this is complete, you should have two federated Consul clusters.
@@ -96,28 +147,6 @@ cd ../consul-secondary
 rm -rf auto-consul1.tf  # Consul1 cluster not needed.
 terraform init
 terraform apply -auto-approve
-```
-
-### Run Helm Manually
-When troubleshooting or trying out new helm chart values you may want to manually use helm to install, upgrade, or delete Consul.  After running terraform to manage the helm install auto-* files will be created with the helm values used by terraform.  You can use these files to see exactly what values were used and to manually uninstall and upgrade Consul config as needed.
-```
-./consul-primary/yaml/
-./consul-secondary/yaml/
-./consul-clients/yaml/
-```
-Review `./consul-secondary/yaml/manual_install.sh` for tips to setup helm, copy k8s secrets from one cluster to another and install consul.
-## Kubectl
-Connect to each AKS cluster and verify you can use kubectl.  If you missed this step in the `quickstart_multiregion` please source this script in your shell for AKS contexts and namespace aliases.
-```
-cd ../quickstart_multiregion
-source kubectl_connect.sh
-```
-Refer to the quickstart-multiregion [README.md](https://github.com/hashicorp/terraform-azure-consul-ent-k8s/blob/main/examples/quickstart-multiregion/README.md) for more information or review the script to learn more about kubectl commands and the aliases it creates in your shell.
-
-```shell
-consul0  # switch context to the primary Consul cluster
-kc get pods # kc alias = kubectl -n consul
-kc exec -it consul-server-0 -- consul catalog services  # list services 
 ```
 
 ### Verify WAN Federated Datacenters see each other
@@ -142,20 +171,10 @@ consul-server-2.dc1  172.16.2.164:8302  alive   server  1.11.5+ent  2         dc
 consul-server-2.dc2  172.17.2.140:8302  alive   server  1.11.5+ent  2         dc2  default    <all>
 ```
 ## Examples
-Review ./examples/README.md for more details.
+Review [Examples](./examples/README.md) for scripts that show how to setup the UI, CLI, deploy sample apps, and other consul configurations.
 
-Access UI
-```
-./examples/ui/get_consul0_ui_url.sh
-./examples/ui/get_consul1_ui_url.sh
-```
-
-Setup the command line environment to work with ACLs enabled
-```
-cli/setup.sh
-```
-## AKS DNS (Optional)
-Configure the AKS cluster to forward .consul requests to Consul DNS resolution.  This will allow you to leverage Consul DNS for failover and other L7 traffic mgmt features.
+## AKS DNS Forwarding to Consul (Optional)
+DNS forwarding is only needed for Service discovery.  This is not required if using service mesh.  To setup DNS forwarding configure the AKS cluster to forward .consul requests to Consul DNS resolution.  This will allow you to leverage Consul DNS for failover and other L7 traffic mgmt features.
 
 Get the Consul DNS clusterIP in the AKS cluster you want to setup.
 ```
@@ -191,7 +210,7 @@ Address 3: 172.17.6.162 consul-server-1.consul-server.consul.svc.cluster.local
 ```
 
 ## Troubleshooting
-### AKS coredns 
+### DNS AKS coredns
 Review defaul AKS coredns
 ```
 kubectl get configmaps --namespace=kube-system coredns -o yaml 
@@ -202,7 +221,7 @@ If log.override is configured then query the dns logs.  The URL below explains t
 kubectl logs --namespace kube-system --selector k8s-app=kube-dns
 ```
 
-### DNS Troubleshooting
+### DNS Consul
 Get DNS services (consul and coredns), start busybox, and use nslookup
 ```
 consuldnsIP=$(kubectl -n consul get svc consul-dns -o json | jq -r '.spec.clusterIP')
@@ -219,7 +238,14 @@ kubectl exec busybox -- nslookup api.virtual.az1.ns.default.ap.aks1-westus2.dc.c
 
 Ref: https://learn.microsoft.com/en-us/azure/aks/coredns-custom
 
-### Helm Troubleshooting
+### Helm
+When troubleshooting or trying out new helm chart values you may want to manually use helm to install, upgrade, or delete Consul.  After running terraform to manage the helm install auto-* files will be created with the helm values used by terraform.  You can use these files to see exactly what values were used and to manually uninstall and upgrade Consul config as needed.
+```
+./consul-primary/yaml/
+./consul-secondary/yaml/
+./consul-clients/yaml/
+```
+You can also review `./consul-secondary/yaml/manual_install.sh` for tips to setup helm repo, copy k8s secrets from one cluster to another and install consul.
 
 #### Primary Consul Cluster using main branch (latest development)
 clone the hashicorp/consul-k8s repo locally to run the latest helm chart.  This is required to test the newest features not yet released or available in beta.
@@ -289,10 +315,10 @@ https://developer.hashicorp.com/consul/tutorials/kubernetes/kubernetes-secure-ag
 
 ### Deploying Example Applications
 To deploy and configure some example applications, please see the
-[apps](https://github.com/ppresto/terraform-azure-consul-ent-k8s/tree/main/examples/apps/fake-services) directory.
+[apps](https://github.com/ppresto/terraform-azure-consul-ent-aks/tree/main/examples/apps/fake-services) directory.
 
 
 ## License
 This code is released under the Mozilla Public License 2.0. Please see
-[LICENSE](https://github.com/hashicorp/terraform-azure-consul-ent-k8s/blob/main/LICENSE)
+[LICENSE](https://github.com/hashicorp/terraform-azure-consul-ent-aks/blob/main/LICENSE)
 for more details.

@@ -10,6 +10,5 @@ spec:
     '*':
       targets:
         - namespace: westus2-2
-          service: api
         - namespace: westus2-3
-          service: api
+        - peer: consul0-eastus

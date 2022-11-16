@@ -19,7 +19,7 @@ kubectl get namespace --context ${CONTEXT}
 
 kubectl create ns consul --context ${CONTEXT}
 
-# Copy secrets from consul0 to the secondary
+# Copy federation and license secrets from consul0 to the secondary
 kubectl -n consul get secret consul-federation --context consul0 -o yaml | kubectl apply --context ${CONTEXT} -f -
 kubectl -n consul get secret consul-ent-license --context consul0 -o yaml | kubectl apply --context ${CONTEXT} -f -
 

@@ -31,7 +31,7 @@ $ kubectl exec statefulset/consul-server --namespace=consul -- consul catalog se
 ```
 
 To lookup services in Consul datacenter `dc1` from `dc2`, [change your kubectl
-context](https://github.com/hashicorp/terraform-azure-consul-ent-k8s/tree/main/examples/prereqs_quickstart#a-note-on-using-kubectl)
+context](https://github.com/hashicorp/terraform-azure-consul-ent-aks/tree/main/examples/prereqs_quickstart#a-note-on-using-kubectl)
 to your cluster containing your secondary Consul datacenter `dc2` and run the
 following command:
 
@@ -47,7 +47,7 @@ $ kubectl exec statefulset/consul-server --namespace=consul -- consul catalog se
 You can run the following command on the cluster you have chosen to deploy these
 microservices into and locally view the dashboard service on port `9002`. For
 help configuring the kubectl command, please see the
-[following](https://github.com/hashicorp/terraform-azure-consul-ent-k8s/blob/main/examples/prereqs_quickstart/README.md#a-note-on-using-kubectl).
+[following](https://github.com/hashicorp/terraform-azure-consul-ent-aks/blob/main/examples/prereqs_quickstart/README.md#a-note-on-using-kubectl).
 
 ```shell
 $ kubectl port-forward deployment/dashboard 9002 -n consul

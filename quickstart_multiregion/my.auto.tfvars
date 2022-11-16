@@ -1,12 +1,6 @@
 # The first region defined will host the primary consul cluster
 regions              = ["eastus", "westus2"]
 region_cidr_list     = ["172.16.0.0/16", "172.17.0.0/16"]
-resource_name_prefix = "presto"
-create_consul_tf     = true
-consul_node_count    = 3
-consul_version       = "1.14.0-dev"
-consul_helm_chart_template = "values-peer-cluster-dev.yaml"  #clone consul-k8s main branch locally
-consul_client_helm_chart_template = "values-client-aks-dev.yaml"
-consul_helm_chart_version  = "1.0.0-beta5"
-#consul_chart_name         = "/Users/patrickpresto/Projects/consul/consul-k8s/charts/consul"
-enable_cluster_peering    = true
+resource_name_prefix = "dmed"
+consul_version       = "1.14.0-ent"
+consul_chart_name         = "/Users/patrickpresto/Projects/consul/consul-k8s/charts/consul"

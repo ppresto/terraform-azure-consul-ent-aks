@@ -1,5 +1,8 @@
 # Examples
-
+Includes scripts that show how to setup the UI, CLI, deploy sample apps, and other consul configurations.
+```
+cd examples
+```
 ## ./cli
 Setup the command line environment to work with ACLs enabled
 ```
@@ -18,7 +21,7 @@ ui/get_consul1_ui_url.sh
 [Fake Service](https://github.com/nicholasjackson/fake-service) is a test service that can handle both HTTP and gRPC traffic, for testing upstream service communications and other service mesh scenarios.  This service can be used to complete the following use cases.
 
 ### Use Case 1 - Services Isolated by Zone, Failover across Zones
-Deploy a service stack in two different availability zones.  Services should only make inner zone calls to the other services in their stack.  Setup a failover rule so in the event a local service isn't available it will attempt to make a request outside of its AZ to a healthy service that is available.
+Deploy a service stack in two different availability zones.  Services should only make inner zone calls to the other services in their stack.  Setup a failover rule so in the event a local service isn't available it will attempt to make a request to another AZ hosting a healthy instance of that service.
 
 #### Setup Use Case 1
 
@@ -27,14 +30,15 @@ aks1  #Switch to westus2 app cluster context
 kubectl apply -f apps/fake-service/westus2/init-consul-config
 ```
 
-Start `web` and `api` services in the secondary region (westus2).  These services will be deployed to a kubernetes namespace called westus2-1.  This also means these services are being deployed to the consul namespace 'westus2-1' because when installing the consul helm chart `consulNamespaces:mirroringK8S` was enabled.  The namespaces are being named with the availability zone for clarity.   The service deployment files below are configured to target only nodes in availability zone 1 (westus2-1) and will use the kubernetes namespace `westus2-1`.
+Deploy `web` and `api` services to the AKS services cluster `aks1` running in the secondary region (westus2).  These services will be deployed to a kubernetes namespace called westus2-1 which maps to the region and availability zone 1.  Once deployed to this k8s namespace consul will create a new consul namespace called 'westus2-1'.  This is enabled by the consul helm chart value `consulNamespaces:mirroringK8S`.  The service deployment files below will target only nodes in availability zone 1 (westus2-1) and run in kubernetes namespace `westus2-1`.
 ```
 kubectl apply -f apps/fake-service/westus2/westus2-1/
+kw1 get pods   # kw1 alias = kubectl -n westus2-1
 ```
 
 Verify the `ingress-gateway` is routing external traffic to the `web`  pods.  `web` should be loadbalancing requests across the `api` pods.
 ```
-echo "http://$(kc get svc consul-ingress-gateway -o json | jq -r '.status.loadBalancer.ingress[].ip'):8080/ui"
+echo "http://$(kc get svc aks1-ingress-gateway -o json | jq -r '.status.loadBalancer.ingress[].ip'):8080/ui"
 ```
 Refresh multiple times and take note of the POD IP Addresses changing.
 

@@ -44,7 +44,7 @@ module "aks_apps_role_assignments" {
   vnet_id          = element(azurerm_virtual_network.vnet.*.id, count.index)
 }
 
-data "template_file" "main" {
+data "template_file" "secondary" {
   # if cluster_peering is false then assume all clients are secondary consul servers
   count    = var.enable_cluster_peering ? 0 : length(module.aks_apps.*.aks_name)
   template = file("${path.module}/templates/consul_helm_main.tmpl")
@@ -62,12 +62,11 @@ data "template_file" "main" {
     consul_helm_chart_template     = var.consul_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
-    #client                        = false  # Install Consul as a client to bootstrap AKS to mesh
   }
 }
 resource "local_file" "secondary-tf" {
   count    = var.create_consul_tf && var.enable_cluster_peering == false ? length(module.aks_apps.*.aks_name) : 0
-  content  = element(data.template_file.main.*.rendered, count.index)
+  content  = element(data.template_file.secondary.*.rendered, count.index)
   filename = "${path.module}/../consul-secondary/auto-${element(module.aks_apps.*.aks_name, count.index)}.tf"
 }
 

@@ -16,9 +16,6 @@ global:
   # TLS configures whether Consul components use TLS.
   tls:
     enabled: true
-    # In Prod create a dns name for consul server pods and add to TLS Certificat SAN
-    # serverAdditionalDNSSANs: []
-    serverAdditionalIPSANs: ["172.16.2.10","172.16.2.11","172.16.2.12"]
   acls:
     manageSystemACLs: true
 
