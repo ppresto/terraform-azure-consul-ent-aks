@@ -6,7 +6,5 @@ metadata:
 spec:
   config:
     protocol: http
-  meshGateway:
-    mode: 'local'
-
-
+#  meshGateway:
+#    mode: 'local'

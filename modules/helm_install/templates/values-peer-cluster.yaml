@@ -1,6 +1,8 @@
 global:
   name: consul
-  image: "hashicorppreview/consul-enterprise:1.14-dev"
+  image: "hashicorp/consul-enterprise:1.14.1-ent"
+  imageK8S: docker.mirror.hashicorp.services/hashicorp/consul-k8s-control-plane:1.0.1
+  imageConsulDataplane: "hashicorp/consul-dataplane:1.0.0"
   enableConsulNamespaces: true
   enterpriseLicense:
     secretName: 'consul-ent-license'
@@ -51,8 +53,8 @@ meshGateway:
     annotations: |
       service.beta.kubernetes.io/azure-load-balancer-internal: "true"
 
-controller:
-  enabled: true
+#controller:
+#  enabled: true
 
 ui:
   enabled: true

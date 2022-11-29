@@ -50,11 +50,11 @@ variable "consul_node_count" {
 
 variable "consul_version" {
   description = "Consul Version"
-  default     = "1.11.5"
+  default     = "1.14.0-ent"
 }
 
 variable "consul_helm_chart_version" {
-  default     = "1.14.0"
+  default     = "1.0.0"
 }
 variable "consul_helm_chart_template" {
   description = "Consul Version depends on the helm chart version. Select helm chart version."

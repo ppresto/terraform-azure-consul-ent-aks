@@ -7,7 +7,7 @@ global:
     secretName: 'consul-ent-license'
     secretKey: 'key'
     enableLicenseAutoload: true
-  datacenter: aks1-westus2
+  datacenter: consul1-westus2
   peering:
     enabled: true
     peerThroughMeshGateways: true

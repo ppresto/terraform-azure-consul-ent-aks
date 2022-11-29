@@ -9,17 +9,10 @@ spec:
     namespace: eastus-1
   sources:
   - name: web
-    namespace: eastus-1
-    action: allow
-  - name: web
+    peer: westus2-shared
     namespace: westus2-1
-    partition: shared
     action: allow
-  - name: web
-    namespace: westus2-2
-    partition: shared
-    action: allow
-  - name: web
-    namespace: westus2-3
-    partition: shared
-    action: allow
+  #- name: web
+  #  namespace: westus2-1
+  #  partition: westus2-shared
+  #  action: allow

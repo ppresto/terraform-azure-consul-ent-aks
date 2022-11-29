@@ -26,6 +26,7 @@ data "template_file" "consul-client" {
     server_replicas = var.server_replicas
     cluster_name    = var.cluster_name
     datacenter      = var.datacenter
+    region          = replace(var.datacenter, "/.*-(.*)/", "$1")
     aks_cluster     = data.azurerm_kubernetes_cluster.cluster.kube_config.0.host
     consul_external_servers = var.consul_external_servers
   }

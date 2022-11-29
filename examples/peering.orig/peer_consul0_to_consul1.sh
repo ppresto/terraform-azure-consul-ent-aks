@@ -8,6 +8,7 @@ function setup () {
   kubectl config use-context consul0
 
   # Create Peering Acceptor (consul0)
+  echo "kubectl apply -f ${SCRIPT_DIR}/peering-acceptor-consul0.yaml"
   kubectl apply -f ${SCRIPT_DIR}/peering-acceptor-consul0.yaml
 
   # Verify Peering Acceptor and Secret was created
@@ -55,5 +56,8 @@ function remove () {
     kubectl delete -f ${SCRIPT_DIR}/peering-acceptor-consul0.yaml
 }
 
-#setup
-remove
+if [[ -z $1 ]]; then
+  setup
+else
+  remove
+fi
