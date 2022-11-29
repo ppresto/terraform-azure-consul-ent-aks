@@ -137,8 +137,18 @@ The helm values used to deploy the Consul dataplane created a new partition and 
 
 At this point, the Namespace drop down menu will only have the default.  This is because we haven't started any services in the AKS cluster within its own K8s namespace.  Once we start services in their own k8s namespace Consul will automatically create a 1/1 Consul namespace for the service providing it with extra adminstrative and service mesh capabilities.
 
-Consul servers and remote dataplanes (AKS clusters) are setup and ready to register services.  [Deploy example services](./examples/README.md) to test out Consul service mesh.
+Consul servers and remote dataplanes (AKS east/west clusters) are setup and ready to register services.  [Deploy example services](./examples/README.md) to test out Consul service mesh.
 
+```
+cd ../examples/apps/fake-service
+./deploy.sh
+```
+
+Peer east/west regions to test failover
+```
+cd ../../peering
+./peer_aks0_to_aks1.sh
+```
 ## WAN Federation Only - Deploy Secondary Consul clusters using Helm
 Skip this step if not setting up a WAN Federated architecture because you cant have secondary clusters.
 
