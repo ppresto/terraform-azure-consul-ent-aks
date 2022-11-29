@@ -29,11 +29,11 @@ function setup () {
   echo "Verifying Peering Connection on Acceptor with curl command:"
   sleep 5
   CONSUL_HTTP_TOKEN=$(kubectl -n consul get secrets consul-bootstrap-acl-token -o go-template --template="{{.data.token|base64decode}}")
-  echo "kubectl -n consul exec -it consul-server-0 -- curl -k --header \"X-Consul-Token: ${CONSUL_HTTP_TOKEN}\" --request GET https://localhost:8501/v1/peering/eastus-shared"
+  echo "kubectl -n consul exec -it consul-server-0 -- curl -k --header \"X-Consul-Token: ${CONSUL_HTTP_TOKEN}\" --request GET https://localhost:8501/v1/peering/westus2-shared?partition=eastus-shared"
   kubectl -n consul exec -it consul-server-0 -- curl -k \
       --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" \
       --request GET \
-      https://localhost:8501/v1/peering/eastus-shared \
+      https://localhost:8501/v1/peering/westus2-shared?partition=eastus-shared \
       | jq -r
 
   # Export Services for each peer to advertise available service catalog.
