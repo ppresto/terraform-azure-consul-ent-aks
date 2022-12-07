@@ -13,7 +13,7 @@ global:
     enabled: true
   adminPartitions:
     enabled: true
-    name: "default"
+    name: ${partition}
 
   # TLS configures whether Consul components use TLS.
   tls:

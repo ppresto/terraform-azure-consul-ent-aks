@@ -78,7 +78,11 @@ variable "consul_namespace" {
   default     = "consul"
   description = "The namespace to install the release into"
 }
-
+variable "consul_partition" {
+  type        = string
+  default     = "default"
+  description = "The partition to install the release into"
+}
 variable "create_namespace" {
   type        = bool
   default     = true

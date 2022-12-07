@@ -10,7 +10,7 @@ global:
   enableConsulNamespaces: true
   adminPartitions:
     enabled: true
-    name: ${region}-shared
+    name: ${partition}
   peering:
     enabled: true
   acls:

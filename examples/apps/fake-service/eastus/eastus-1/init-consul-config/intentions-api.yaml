@@ -5,12 +5,12 @@ metadata:
   name: api
 spec:
   destination:
-    name: api
+    name: "*"
     namespace: eastus-1
   sources:
-  - name: web
+  - name: "*"
     peer: westus2-shared
-    namespace: westus2-1
+    namespace: "*"
     action: allow
   #- name: web
   #  namespace: westus2-1

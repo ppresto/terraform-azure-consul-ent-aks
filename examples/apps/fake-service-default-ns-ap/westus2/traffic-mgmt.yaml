@@ -1,0 +1,13 @@
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceResolver
+metadata:
+  name: api
+spec:
+  connectTimeout: 0s
+  failover:
+    '*':
+      targets:
+        - peer: consul0-eastus
+          service: api
+

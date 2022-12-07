@@ -21,6 +21,7 @@
       - [Primary Consul Cluster using main branch (latest development)](#primary-consul-cluster-using-main-branch-latest-development)
       - [Client Dataplane - AKS Cluster using beta version](#client-dataplane---aks-cluster-using-beta-version)
     - [CA Cert](#ca-cert)
+    - [Connect - Peer Failover Targets](#connect---peer-failover-targets)
   - [References](#references)
   - [Next Steps](#next-steps)
     - [Deploying Example Applications](#deploying-example-applications)
@@ -303,7 +304,7 @@ kubectl -n consul get secret consul-bootstrap-acl-token --context consul0 -o yam
 kubectl -n consul get secret consul-ca-cert --context consul0 -o yaml \
 | kubectl apply --context aks0 -f -
 
-helm -n consul install aks0-eastus hashicorp/consul --version 1.0.0-beta3 -f yaml/auto-aks0-eastus-values.yaml 
+helm -n consul install aks0-eastus hashicorp/consul --version 1.0.1 -f yaml/auto-aks0-eastus-values.yaml 
 
 # helm -n consul uninstall aks0-eastus
 
@@ -315,6 +316,30 @@ Use openssl to view a cert in k8s secrets.
 ```
 kubectl get secret -n consul consul-ca-cert -o jsonpath="{.data['tls\.crt']}" | base64 --decode | openssl x509 -text -noout
 ```
+
+### Connect - Peer Failover Targets
+
+Discovery Chain - verify protocols are all http
+```
+# use-context for westus2 consul cluster
+consul1
+
+export CONSUL_HTTP_TOKEN=$(kubectl get --namespace consul secrets/consul-bootstrap-acl-token --template={{.data.token}} | base64 -d)
+
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api | jq -r
+```
+Endpoint should point to the MG on the other side
+```
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/health/connect/api?peer=consul0-eastus | jq -r
+
+#curl -sL "localhost:8500/v1/health/connect/unicorn-backend?ns=default&partition=unicorn&peer=dc2-unicorn"
+```
+
+Debug logging
+```
+curl -XPOST localhost:19000/logging?level=debug
+```
+
 
 ## References
 https://developer.hashicorp.com/consul/tutorials/kubernetes/kubernetes-secure-agents

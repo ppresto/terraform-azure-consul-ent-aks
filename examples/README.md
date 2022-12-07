@@ -38,7 +38,7 @@ kw1 get pods   # kw1 alias = kubectl -n westus2-1
 
 Verify the `ingress-gateway` is routing external traffic to the `web`  pods.  `web` should be loadbalancing requests across the `api` pods.
 ```
-echo "http://$(kc get svc aks1-ingress-gateway -o json | jq -r '.status.loadBalancer.ingress[].ip'):8080/ui"
+echo "http://$(kc get svc -l component=ingress-gateway -o json | jq -r '.items[].status.loadBalancer.ingress[].ip'):8080/ui"
 ```
 Refresh multiple times and take note of the POD IP Addresses changing.
 

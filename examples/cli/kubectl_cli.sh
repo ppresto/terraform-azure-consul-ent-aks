@@ -17,3 +17,5 @@ kubectl -n consul exec -it consul-server-0 -- consul members
 
 # consul command to list partitions that requires ACL token
 kubectl -n consul exec -it consul-server-0 -- consul partition list -token "${CONSUL_HTTP_TOKEN}"
+# list auth methods
+kubectl -n consul exec -it consul-server-0 -- consul acl auth-method list -token ${CONSUL_HTTP_TOKEN}

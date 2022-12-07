@@ -94,6 +94,7 @@ data "template_file" "consul-terraform" {
     consul_helm_chart_template     = var.consul_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
+    partition                     = "default"
   }
 }
 

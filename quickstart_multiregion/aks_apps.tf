@@ -88,6 +88,8 @@ data "template_file" "clients" {
     consul_helm_chart_template    = var.consul_client_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
+    #partition                     = replace(var.datacenter, "/.*-(.*)/", "$1-shared")
+    partition                     = "default"
   }
 }
 resource "local_file" "client-tf" {

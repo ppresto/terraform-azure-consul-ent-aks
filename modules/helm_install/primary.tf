@@ -25,6 +25,7 @@ data "template_file" "consul-primary" {
     consul_version  = var.consul_version
     server_replicas = var.server_replicas
     datacenter      = var.datacenter
+    partition        = var.consul_partition
   }
 }
 resource "local_file" "consul-primary" {
