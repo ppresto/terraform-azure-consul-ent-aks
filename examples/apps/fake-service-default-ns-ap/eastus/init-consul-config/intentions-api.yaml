@@ -5,9 +5,9 @@ metadata:
   name: api
 spec:
   destination:
-    name: "*"
+    name: "api"
   sources:
-  - name: "*"
+  - name: "web"
     peer: consul1-westus2
     action: allow
   #- name: web

@@ -281,6 +281,10 @@ kubectl -n consul logs <pod>
 
 Uninstall the helm chart and verify the environment is clean before reinstalling
 ```
+# use consul-k8s CLI for clean uninstall and PVC deletion.
+consul-k8s uninstall -auto-approve -wipe-data
+
+# If using helm instead, ensure crd, pv, pvc resources are removed
 helm -n consul uninstall consul0-eastus
 kubectl get all
 kubectl get crd
@@ -304,9 +308,10 @@ kubectl -n consul get secret consul-bootstrap-acl-token --context consul0 -o yam
 kubectl -n consul get secret consul-ca-cert --context consul0 -o yaml \
 | kubectl apply --context aks0 -f -
 
-helm -n consul install aks0-eastus hashicorp/consul --version 1.0.1 -f yaml/auto-aks0-eastus-values.yaml 
+helm -n consul install aks0-eastus hashicorp/consul --version 1.0.1 -f yaml/auto-aks0-eastus-values.yaml
 
 # helm -n consul uninstall aks0-eastus
+# consul-k8s uninstall -auto-approve -wipe-data
 
 ```
 

@@ -12,8 +12,8 @@ function setup () {
   kubectl apply -f ${SCRIPT_DIR}/peering-acceptor-aks0.yaml
 
   # Verify Peering Acceptor and Secret was created
-  kubectl -n consul get secrets peering-token-aks1-westus2
   kubectl -n consul get peeringacceptors
+  kubectl -n consul get secret peering-token-aks1-westus2 --template "{{.data.data | base64decode | base64decode }}" | jq
 
   # Copy secrets from peering acceptor (aks0) to peering dialer (aks1)
   kubectl -n consul get secret peering-token-aks1-westus2 --context aks0 -o yaml | kubectl apply --context aks1 -f -

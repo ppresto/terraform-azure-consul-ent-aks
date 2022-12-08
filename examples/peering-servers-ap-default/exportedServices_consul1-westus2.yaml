@@ -5,11 +5,9 @@ metadata:
 spec:
   services:
     - name: "api" ## The name of the service you want to export
-      namespace: "*"
       consumers:
       - peer: consul0-eastus ## The name of the peer that receives the service
     - name: "web"
-      namespace: "*"
       consumers:
       - peer: consul0-eastus
 
