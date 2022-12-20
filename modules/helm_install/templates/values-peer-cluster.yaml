@@ -1,7 +1,7 @@
 global:
   name: consul
-  image: "hashicorp/consul-enterprise:1.14.1-ent"
-  imageK8S: docker.mirror.hashicorp.services/hashicorp/consul-k8s-control-plane:1.0.1
+  image: "hashicorp/consul-enterprise:1.14.2-ent"
+  imageK8S: docker.mirror.hashicorp.services/hashicorp/consul-k8s-control-plane:1.0.2
   imageConsulDataplane: "hashicorp/consul-dataplane:1.0.0"
   enableConsulNamespaces: true
   enterpriseLicense:
@@ -46,13 +46,20 @@ connectInject:
 
 meshGateway:
   enabled: true
-  replicas: 3
+  replicas: 1
   service:
     enabled: true
     type: LoadBalancer
     annotations: |
       service.beta.kubernetes.io/azure-load-balancer-internal: "true"
-
+ingressGateways:
+  enabled: true
+  defaults:
+    replicas: 1
+  gateways:
+    - name: ingress-gateway
+      service:
+        type: LoadBalancer
 #controller:
 #  enabled: true
 

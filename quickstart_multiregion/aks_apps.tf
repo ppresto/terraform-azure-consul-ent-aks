@@ -21,7 +21,8 @@ resource "azurerm_subnet" "apps" {
 
 # Create 1 AKS cluster in each apps subnet
 module "aks_apps" {
-  source         = "../modules/aks-kubenet/"
+  source = "../modules/aks-kubenet/"
+  #source         = "../modules/aks-cni/"
   count          = length(azurerm_subnet.apps.*.id)
   resource_group = element(azurerm_resource_group.example.*, count.index)
   aks_subnet_id  = element(azurerm_subnet.apps.*.id, count.index)
@@ -59,7 +60,7 @@ data "template_file" "secondary" {
     primary                       = var.enable_cluster_peering ? 0 : 1 # set index 1 to be a secondary consul cluster for WAN Fed.  Cluster Peering requires all clusters to be primary
     consul_version                = var.consul_version
     consul_helm_chart_version     = var.consul_helm_chart_version
-    consul_helm_chart_template     = var.consul_helm_chart_template
+    consul_helm_chart_template    = var.consul_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
   }
@@ -88,8 +89,8 @@ data "template_file" "clients" {
     consul_helm_chart_template    = var.consul_client_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
-    #partition                     = replace(var.datacenter, "/.*-(.*)/", "$1-shared")
-    partition                     = "default"
+    partition                     = "${element(var.regions, count.index)}-shared"
+    #partition                     = "default"
   }
 }
 resource "local_file" "client-tf" {

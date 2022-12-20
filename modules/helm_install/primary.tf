@@ -15,17 +15,18 @@ resource "helm_release" "consul_primary" {
   timeout          = 900
   version          = var.consul_helm_chart_version
 
-  values = [data.template_file.consul-primary[0].rendered]
+  values     = [data.template_file.consul-primary[0].rendered]
   depends_on = [kubernetes_namespace.consul]
 }
 data "template_file" "consul-primary" {
   count    = var.primary_datacenter && var.client == false ? 1 : 0
   template = file("${path.module}/templates/${var.consul_helm_chart_template}")
   vars = {
-    consul_version  = var.consul_version
-    server_replicas = var.server_replicas
-    datacenter      = var.datacenter
-    partition        = var.consul_partition
+    consul_version            = var.consul_version
+    server_replicas           = var.server_replicas
+    datacenter                = var.datacenter
+    partition                 = var.consul_partition
+    consul_helm_chart_version = var.consul_helm_chart_version
   }
 }
 resource "local_file" "consul-primary" {
@@ -35,7 +36,7 @@ resource "local_file" "consul-primary" {
 }
 
 resource "kubernetes_secret" "consul_license_primary" {
-  count        = var.primary_datacenter && var.client == false ? 1 : 0
+  count = var.primary_datacenter && var.client == false ? 1 : 0
   metadata {
     name      = "consul-ent-license"
     namespace = var.kubernetes_namespace
@@ -106,15 +107,17 @@ metadata:
   name: global
   namespace: "${var.kubernetes_namespace}"
 spec:
+  config:
+    protocol: http
   meshGateway:
-    mode: 'local'
+    mode: local
 YAML
 
   depends_on = [helm_release.consul_primary[0]]
 }
 resource "kubectl_manifest" "mesh_defaults" {
-  count     = var.primary_datacenter && var.client == false ? 1 : 0
-  yaml_body = <<YAML
+  count      = var.primary_datacenter && var.client == false ? 1 : 0
+  yaml_body  = <<YAML
 apiVersion: consul.hashicorp.com/v1alpha1
 kind: Mesh
 metadata:

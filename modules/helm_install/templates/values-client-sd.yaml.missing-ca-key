@@ -1,0 +1,58 @@
+global:
+  name: consul
+  image: "hashicorp/consul-enterprise:1.14.2-ent"
+  imageK8S: docker.mirror.hashicorp.services/hashicorp/consul-k8s-control-plane:1.0.2
+  imageConsulDataplane: "hashicorp/consul-dataplane:1.0.0"
+  enableConsulNamespaces: true
+  enterpriseLicense:
+    secretName: 'consul-ent-license'
+    secretKey: 'key'
+    enableLicenseAutoload: true
+  datacenter: ${datacenter}
+  adminPartitions:
+    enabled: true
+    name: ${partition}
+
+  # TLS configures whether Consul components use TLS.
+  acls:
+    manageSystemACLs: true
+    bootstrapToken:
+      secretName: consul-bootstrap-acl-token
+      secretKey: token
+  tls:
+    enabled: true
+    caCert:
+      secretName: consul-ca-cert
+      secretKey: tls.crt
+
+externalServers:
+  enabled: true
+  hosts: ["${consul_external_servers}"]
+  tlsServerName: "server.${datacenter}.consul"
+  httpsPort: 8501
+  grpcPort: 8502
+  useSystemRoots: false
+  k8sAuthMethodHost: ${aks_cluster}
+
+server:
+  enabled: false
+
+syncCatalog:
+  enabled: true
+  consulNamespaces:
+    mirroringK8S: true
+  addK8SNamespaceSuffix: false
+dns:
+  enabled: true
+  enableRedirection: true
+  #type: ClusterIP
+  #clusterIP: 172.16.2.12
+
+meshGateway:
+  enabled: true
+  replicas: 1
+  service:
+    enabled: true
+    type: LoadBalancer
+    annotations: |
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"

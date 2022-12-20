@@ -59,7 +59,7 @@ variable "consul_client_helm_chart_template" {
   description = "Select helm chart template."
   # Supported Versions
   # default = "0.41.0" - WAN Federation
-  default     = ""
+  default = ""
 }
 
 variable "consul_version" {

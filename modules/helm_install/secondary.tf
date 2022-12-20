@@ -35,7 +35,7 @@ resource "local_file" "consul-secondary" {
 }
 
 resource "kubernetes_secret" "consul_license_secondary" {
-  count    = var.primary_datacenter ? 0 : 1
+  count = var.primary_datacenter ? 0 : 1
   metadata {
     name      = "consul-ent-license"
     namespace = var.kubernetes_namespace
