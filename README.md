@@ -22,6 +22,7 @@
       - [Client Dataplane - AKS Cluster using beta version](#client-dataplane---aks-cluster-using-beta-version)
     - [CA Cert](#ca-cert)
     - [Connect - Review Peer Failover Targets](#connect---review-peer-failover-targets)
+    - [Get Fake Service Pod IP's](#get-fake-service-pod-ips)
     - [Connect - Review Envoy Proxy configuration](#connect---review-envoy-proxy-configuration)
     - [Connect - Review Service Mesh defaults](#connect---review-service-mesh-defaults)
   - [References](#references)
@@ -344,12 +345,24 @@ Debug logging
 curl -XPOST localhost:19000/logging?level=debug
 ```
 
+### Get Fake Service Pod IP's
+Verify the `api` pod IP `web` is routing too.
+```
+consul0
+kubectl get pods -o wide -l app=api
+
+consul1
+kubectl get pods -o wide -l app=api
+```
 ### Connect - Review Envoy Proxy configuration
 All external traffic should be between the mesh gateways hosted in each peered region.  Review the routing for `web` and look for local and remote routes for `api`.  Verify the local mesh gateway IP and that all external routes are using this IP.
 ```
 consul1
 kc get svc consul-mesh-gateway
 kubectl exec -it deploy/web -- curl localhost:19000/clusters
+
+# Review Mesh-Gateway envoy endpoints with browser (localhost:19000)
+kc port-forward deploy/consul-mesh-gateway 19000:19000
 ```
 
 Revier the envoy configuration for `web`
@@ -362,8 +375,8 @@ kubectl exec -it deploy/web -- curl localhost:19000/config_dump
 Output mesh and proxy-defauls using the K8s objects
 ```
 consul1
-kc get proxy-defaults global -o yaml
-kc get meshes mesh -o yaml
+kubectl get proxy-defaults global -o yaml
+kubectl get meshes mesh -o yaml
 ```
 
 Connect to the server container and use the consul CLI to verify mesh configurations
