@@ -109,6 +109,7 @@ Both Consul clusters are setup the same. The upper left corner shows the consul 
 - Auth Methods: The K8s API used to authenticate consul cluster services
 Check out the default policies, roles, and tokens that were created
 
+
 ### Deploy Services to Consul's default partition and namespace
 To simplify the design and test simple use cases, deploy services directly to the AKS clusters running Consul. Removing Consul Partitions (aka: remote dataplanes) and Namespaces simplifies the architecture for testing.  This section will setup services on the same AKS clusters running Consul and use the default partition and namespace.
 
@@ -295,6 +296,11 @@ kubectl -n consul get crd  #verify everything was removed
 Edit `yaml/auto-consul0-eastus-values.yaml` with changes and reinstall.  Notice there is no helm version specified below.  Instead this release is pointing to the main branch of the consul-k8s repo cloned above.  This will have the latest development updates.  Do not use in production.
 ```
 helm install consul0-eastus -n consul -f yaml/auto-consul0-eastus-values.yaml /tmp/consul-k8s/charts/consul
+```
+
+To use a specific helm chart version
+```
+helm install consul0-eastus hashicorp/consul -n consul -f yaml/auto-consul0-eastus-values.yaml --version 0.41.1
 ```
 
 #### Client Dataplane - AKS Cluster using beta version

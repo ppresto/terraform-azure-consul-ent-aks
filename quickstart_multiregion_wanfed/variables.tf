@@ -59,9 +59,8 @@ variable "consul_helm_chart_version" {
 variable "consul_helm_chart_template" {
   description = "Consul Version depends on the helm chart version. Select helm chart version."
   # Supported Versions
-  # default = "0.41.0" - WAN Federation
-  # default = "1.13.3" - Cluster Peering
-  default = "values-peer-cluster.yaml"
+  default = "0.41.1" # default for WAN Federation
+  # default = "values-peer-cluster.yaml"
 }
 variable "consul_client_helm_chart_template" {
   description = "Select helm chart template."

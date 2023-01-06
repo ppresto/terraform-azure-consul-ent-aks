@@ -99,7 +99,8 @@ data "kubernetes_secret" "consul-bootstrap-secret" {
 }
 
 resource "kubectl_manifest" "proxy_defaults" {
-  count     = var.primary_datacenter && var.client == false ? 1 : 0
+  count     = 0
+  #count     = var.primary_datacenter && var.client == false ? 1 : 0
   yaml_body = <<YAML
 apiVersion: consul.hashicorp.com/v1alpha1
 kind: ProxyDefaults
@@ -116,7 +117,8 @@ YAML
   depends_on = [helm_release.consul_primary[0]]
 }
 resource "kubectl_manifest" "mesh_defaults" {
-  count      = var.primary_datacenter && var.client == false ? 1 : 0
+  count     = 0
+  #count      = var.primary_datacenter && var.client == false ? 1 : 0
   yaml_body  = <<YAML
 apiVersion: consul.hashicorp.com/v1alpha1
 kind: Mesh

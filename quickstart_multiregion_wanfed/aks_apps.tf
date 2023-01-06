@@ -59,9 +59,10 @@ data "template_file" "secondary" {
     primary                       = var.enable_cluster_peering ? 0 : 1 # set index 1 to be a secondary consul cluster for WAN Fed.  Cluster Peering requires all clusters to be primary
     consul_version                = var.consul_version
     consul_helm_chart_version     = var.consul_helm_chart_version
-    consul_helm_chart_template    = var.consul_helm_chart_template
+    consul_helm_chart_template    = "values-secondary-cluster-${var.consul_helm_chart_version}.yaml"
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
+    partition                     = "default"
   }
 }
 resource "local_file" "secondary-tf" {
