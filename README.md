@@ -298,9 +298,10 @@ Edit `yaml/auto-consul0-eastus-values.yaml` with changes and reinstall.  Notice 
 helm install consul0-eastus -n consul -f yaml/auto-consul0-eastus-values.yaml /tmp/consul-k8s/charts/consul
 ```
 
-To use a specific helm chart version
+Examples using a specific helm chart version
 ```
-helm install consul0-eastus hashicorp/consul -n consul -f yaml/auto-consul0-eastus-values.yaml --version 0.41.1
+helm install consul0-eastus hashicorp/consul -n consul -f yaml/auto-consul0-eastus-values.yaml --version 1.0.2
+helm install consul1-westus2 hashicorp/consul -n consul -f yaml/auto-consul1-westus2-values.yaml --version 1.0.2
 ```
 
 #### Client Dataplane - AKS Cluster using beta version

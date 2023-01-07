@@ -1,0 +1,54 @@
+global:
+  name: consul
+  #image: "hashicorp/consul-enterprise:1.14.0-beta1-ent"
+  image: "hashicorppreview/consul-enterprise:1.14-dev"
+  enableConsulNamespaces: true
+  enterpriseLicense:
+    secretName: 'consul-ent-license'
+    secretKey: 'key'
+    enableLicenseAutoload: true
+  datacenter: consul1-westus2
+  peering:
+    enabled: true
+    peerThroughMeshGateways: true
+  # TLS configures whether Consul components use TLS.
+  tls:
+    enabled: true
+  acls:
+    manageSystemACLs: true
+
+server:
+ replicas: 3
+ bootstrapExpect: 3
+ extraConfig: |
+   {
+     "log_level": "TRACE"
+   }
+exposeService:
+  enabled: true
+  type: LoadBalancer
+  annotations: |
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+
+connectInject:
+  enabled: true
+  consulNamespaces:
+    mirroringK8S: true
+
+meshGateway:
+  enabled: true
+  replicas: 3
+  service:
+    enabled: true
+    type: LoadBalancer
+    annotations: |
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+
+controller:
+  enabled: true
+
+ui:
+  enabled: true
+  service:
+    enabled: true
+    type: LoadBalancer

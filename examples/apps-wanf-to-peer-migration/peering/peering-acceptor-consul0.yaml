@@ -1,0 +1,11 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: PeeringAcceptor
+metadata:
+  name: consul1-westus2 ## Peer Name:  name of the peer you want to connect to
+  namespace: consul     ## k8s namespace
+spec:
+  peer:
+    secret:
+      name: "peering-token-consul1-westus2"
+      key: "data"
+      backend: "kubernetes"

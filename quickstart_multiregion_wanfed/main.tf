@@ -87,11 +87,12 @@ data "template_file" "consul-terraform" {
     key_vault_resource_group_name = azurerm_resource_group.example[0].name
     cluster_name                  = element(module.aks_consul.*.aks_name, count.index)
     primary                       = var.enable_cluster_peering ? 0 : count.index # set first region (index 0) to primary unless cluster peering is enabled
+    primary_dc                    = "${element(module.aks_consul.*.aks_name, 0)}-${element(var.regions, 0)}"
     datacenter                    = "${element(module.aks_consul.*.aks_name, count.index)}-${element(var.regions, count.index)}"
     release_name                  = "${element(module.aks_consul.*.aks_name, count.index)}-${element(var.regions, count.index)}"
     consul_version                = var.consul_version
     consul_helm_chart_version     = var.consul_helm_chart_version
-    consul_helm_chart_template    = "values-primary-cluster-${var.consul_helm_chart_version}.yaml"
+    consul_helm_chart_template    = "values-${count.index == 0 || var.enable_cluster_peering ? "primary" : "secondary"}-cluster-${var.consul_helm_chart_version}.yaml"
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
     partition                     = "default"

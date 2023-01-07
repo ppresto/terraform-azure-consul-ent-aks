@@ -100,6 +100,11 @@ variable "primary_datacenter" {
   description = "If true, installs Consul with a primary datacenter configuration. Set to false for secondary datacenters"
 }
 
+variable "primary_dc" {
+  description = "Primary datacenter name required by helm chart"
+  default = "dc1"
+}
+
 variable "enable_cluster_peering" {
   description = "Set this variable to true if you want to setup all Consul clusters as primaries that support cluster peering"
   default     = false

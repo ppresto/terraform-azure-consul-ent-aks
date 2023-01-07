@@ -163,30 +163,35 @@ consul0  # switch context to the primary Consul cluster
 kc get pods # kc alias = kubectl -n consul
 kc exec -it consul-server-0 -- consul catalog services  # list services 
 ```
-Consul resources are deployed into a `consul` k8s namespace.  use the `consul1` alias to switch to the primary cluster in the second region (westus2) and review pod READY status and the service catalog to verify the cluster is operational.
+Consul resources are deployed into a `consul` k8s namespace.  use the `consul1` alias to switch to the cluster in the second region (westus2) and review pod READY status and the service catalog to verify the cluster is operational.
 
-### Consul UI - Validate Primary Consul clusters with the UI
-When installing Consul the helm values enabled the UI with an external LoadBalancer IP for easy access.  This is not recommended for production.  Use the following scripts to get the URL and login token for full access to each Consul cluster UI.
+### Consul UI - Validate Consul clusters with the UI
+When installing Consul the helm values enabled the UI with an external LoadBalancer IP for easy access.  This is not recommended for production.  Use the following scripts to get the URL and login token for full access to each Consul cluster UI. 
+
 ```
 cd .. # Go to repo base
 examples/ui/get_consul0_ui_url.sh
-examples/ui/get_consul1_ui_url.sh
 ```
-Both Consul clusters are setup the same. The upper left corner shows the consul datacenter name `consul0-eastus` or `consul1-westus2` that was configured in the helm values.  Go to the default Admin Partion, and Namespace to review the server.
+In the UI the upper left corner shows the consul datacenter name `consul0-eastus` or `consul1-westus2` that was configured in the helm values.  Go to the default Admin Partion, and Namespace to review the server.
 - Services:     See the core Consul services (consul, mesh-gateway).
 - Nodes:        The 3 nodes that make up the Consul cluster with leader identified
 - Auth Methods: The K8s API used to authenticate consul cluster services
-Check out the default policies, roles, and tokens that were created
+Check out the default policies, roles, and tokens that were created.
 
 ## WAN Federation Only - Deploy Secondary Consul clusters using Helm
-Skip this step if not setting up a WAN Federated architecture because you cant have secondary clusters.
 
-Run `terraform init` and `terraform apply` in `./consul-secondary` to set up your secondary Consul cluster. Once this is complete, you should have two federated Consul clusters.
+Run `terraform init` and `terraform apply` in `./consul-secondary` to set up secondary Consul clusters. Once this is complete, you should have two federated Consul clusters.
 ```
 cd ../consul-secondary
-rm -rf auto-consul1.tf  # Consul1 cluster not needed.
+# rm -rf auto-consul1.tf  # Remove 1+ auto-*.tf files to reduce secondary clusters.
 terraform init
 terraform apply -auto-approve
+```
+
+FYI: With WAN Federated clusters the secondary cluster will not have a login token.  Use the primary cluster's token to login from the example above.  The script below will give the URL in this case, but no token.
+```
+cd .. # Go to repo base
+examples/ui/get_consul1_ui_url.sh
 ```
 
 ### Verify WAN Federated Datacenters see each other
@@ -202,13 +207,78 @@ Your output should show servers from both `dc1` and `dc2` similar to what is
 show below:
 
 ```shell
-Node                 Address            Status  Type    Build       Protocol  DC   Partition  Segment
-consul-server-0.dc1  172.16.2.127:8302  alive   server  1.11.5+ent  2         dc1  default    <all>
-consul-server-0.dc2  172.17.2.150:8302  alive   server  1.11.5+ent  2         dc2  default    <all>
-consul-server-1.dc1  172.16.2.199:8302  alive   server  1.11.5+ent  2         dc1  default    <all>
-consul-server-1.dc2  172.17.2.205:8302  alive   server  1.11.5+ent  2         dc2  default    <all>
-consul-server-2.dc1  172.16.2.164:8302  alive   server  1.11.5+ent  2         dc1  default    <all>
-consul-server-2.dc2  172.17.2.140:8302  alive   server  1.11.5+ent  2         dc2  default    <all>
+Node                             Address           Status  Type    Build       Protocol  DC               Partition  Segment
+consul-server-0.consul0-eastus   10.244.3.43:8302  alive   server  1.14.3+ent  2         consul0-eastus   default    <all>
+consul-server-0.consul1-westus2  10.244.5.13:8302  alive   server  1.14.3+ent  2         consul1-westus2  default    <all>
+consul-server-1.consul0-eastus   10.244.5.29:8302  alive   server  1.14.3+ent  2         consul0-eastus   default    <all>
+consul-server-1.consul1-westus2  10.244.4.16:8302  alive   server  1.14.3+ent  2         consul1-westus2  default    <all>
+consul-server-2.consul0-eastus   10.244.4.49:8302  alive   server  1.14.3+ent  2         consul0-eastus   default    <all>
+consul-server-2.consul1-westus2  10.244.3.11:8302  alive   server  1.14.3+ent  2         consul1-westus2  default    <all>
+```
+
+Verify remote services across each datacenter
+```
+# From the East look at the service catalog in the West
+consul0
+kubectl exec statefulset/consul-server --namespace consul -- consul catalog services -datacenter consul1-westus2
+
+# West to East
+consul1
+kubectl exec statefulset/consul-server --namespace consul -- consul catalog services -datacenter consul0-eastus
+```
+## Deploy Services
+Deploy services to the default Partition, and default Namespace of the K8s cluster that is hosting Consul.  The output of the script will give the Fake Service URL.
+```
+cd examples/apps-wanf-server-def-def
+./deploy-consul0_consul1.sh
+```
+The westus2/web.yaml is defined with a static upstream pointing to eastus/api using WAN Federation.
+
+## Upgrade Consul Servers to support Peering
+Review the upgrade docs at https://developer.hashicorp.com/consul/docs/k8s/upgrade
+
+Upgrade the Secondary clusters first (ex: consul1)
+```
+cd consul-secondary
+kubectl config use-context consul1
+helm list --filter consul --namespace consul  # get current versions to update commands as needed.
+```
+
+Update the helm values to support Peering and additional features as needed.
+`./yaml/auto-consul1-westus2-values.yaml`
+```
+global:
+	peering:
+		enabled: true
+
+connectInject:
+  enabled: true
+  transparentProxy:
+    defaultEnabled: false
+
+server:
+  extraConfig: |
+   {
+     "log_level": "TRACE"
+   }
+```
+
+Verify Changes
+```
+helm plugin install https://github.com/databus23/helm-diff
+helm diff upgrade consul1-westus2 hashicorp/consul -n consul -f yaml/auto-consul1-westus2-values.yaml --version 1.0.2 | grep "has changed"
+```
+Run helm upgrade to configure new values.
+```
+helm upgrade consul1-westus2 hashicorp/consul -n consul -f yaml/auto-consul1-westus2-values.yaml --version 1.0.2
+```
+Run the same steps on the remaining secondary clusters.
+
+Upgrade the Primary last.  Update the yaml with the same values as the secondaries in this case.
+```
+consul0
+cd ../consul-primary
+helm upgrade consul0-eastus hashicorp/consul -n consul -f yaml/auto-consul0-eastus-values.yaml --version 1.0.2
 ```
 
 ## Complete

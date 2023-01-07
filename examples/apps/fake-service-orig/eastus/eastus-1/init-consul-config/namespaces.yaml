@@ -1,7 +1,0 @@
----
-kind: Namespace
-apiVersion: v1
-metadata:
-  name: eastus-1
-  labels:
-    name: eastus-1
