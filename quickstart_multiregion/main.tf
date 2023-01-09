@@ -96,6 +96,7 @@ data "template_file" "consul-terraform" {
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
     partition                     = "default"
+    primary_datacenter_name                    = "${element(module.aks_consul.*.aks_name, 0)}-${element(var.regions, 0)}"
   }
 }
 

@@ -18,10 +18,14 @@ module "consul_${cluster_name}" {
   consul_license       = file("../files/consul.lic")
   enable_cluster_peering     = ${enable_cluster_peering}
   consul_helm_chart_version  = "${consul_helm_chart_version}"
-  %{ if enable_cluster_peering == false }{
-    %{ if primary == "0" }consul_helm_chart_template = "values-primary-cluster-${consul_helm_chart_template}.yaml"
-    %{else}consul_helm_chart_template = "values-secondary-cluster-${consul_helm_chart_template}.yaml"%{ endif }
-  }%{else}consul_helm_chart_template = "${consul_helm_chart_template}" %{ endif }
+  
+  # If WAN Federation is enabled, verify primary/secondary and configure accordingly
   %{ if primary == "0" }primary_datacenter         = true%{ else }primary_datacenter         = false%{ endif }
+  %{ if tobool(enable_cluster_peering) == false }
+  %{ if primary == "0" }consul_helm_chart_template = "values-primary-cluster-${consul_helm_chart_version}.yaml"
+  %{ else }consul_helm_chart_template = "values-secondary-cluster-${consul_helm_chart_version}.yaml"
+  primary_datacenter_name    = "${primary_datacenter_name}" %{ endif }
+  %{ else }consul_helm_chart_template = "${consul_helm_chart_template}"
+  %{ endif }
 }
 

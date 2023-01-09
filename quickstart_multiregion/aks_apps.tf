@@ -56,6 +56,7 @@ data "template_file" "secondary" {
     key_vault_resource_group_name = azurerm_resource_group.example[0].name
     cluster_name                  = element(module.aks_apps.*.aks_name, count.index)
     datacenter                    = "${element(module.aks_consul.*.aks_name, count.index)}-${element(var.regions, count.index)}"
+    partition                     = "default"
     release_name                  = "${element(module.aks_apps.*.aks_name, count.index)}-${element(var.regions, count.index)}"
     primary                       = var.enable_cluster_peering ? 0 : 1 # set index 1 to be a secondary consul cluster for WAN Fed.  Cluster Peering requires all clusters to be primary
     consul_version                = var.consul_version
@@ -63,6 +64,7 @@ data "template_file" "secondary" {
     consul_helm_chart_template    = var.consul_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
+    primary_datacenter_name                    = "${element(module.aks_consul.*.aks_name, 0)}-${element(var.regions, 0)}"
   }
 }
 resource "local_file" "secondary-tf" {

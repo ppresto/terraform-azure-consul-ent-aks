@@ -29,11 +29,12 @@ function setup () {
 
   # Verify peering on consul0
   kubectl config use-context consul0
+  CONSUL_HTTP_TOKEN=$(kubectl -n consul get secrets consul-bootstrap-acl-token -o go-template --template="{{.data.token|base64decode}}")
+
   echo
   echo "Verifying Peering Connection on Acceptor (consul0) with curl command:"
   echo "kubectl -n consul exec -it consul-server-0 -- curl -k --header \"X-Consul-Token: ${CONSUL_HTTP_TOKEN}\" --request GET https://localhost:8501/v1/peering/consul1-westus2"
   sleep 5
-  CONSUL_HTTP_TOKEN=$(kubectl -n consul get secrets consul-bootstrap-acl-token -o go-template --template="{{.data.token|base64decode}}")
   kubectl -n consul exec -it consul-server-0 -- curl -k \
       --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" \
       --request GET \

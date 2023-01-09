@@ -24,10 +24,11 @@ data "template_file" "consul-secondary" {
   template = file("${path.module}/templates/${var.consul_helm_chart_template}")
   vars = {
     consul_version  = var.consul_version
+    consul_helm_chart_version = var.consul_helm_chart_version
     server_replicas = var.server_replicas
     datacenter      = var.datacenter
     aks_cluster     = data.azurerm_kubernetes_cluster.cluster.kube_config.0.host
-    primary_dc      = var.primary_dc
+    primary_datacenter_name      = var.primary_datacenter_name
   }
 }
 resource "local_file" "consul-secondary" {

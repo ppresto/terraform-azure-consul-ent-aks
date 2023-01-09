@@ -100,7 +100,7 @@ variable "primary_datacenter" {
   description = "If true, installs Consul with a primary datacenter configuration. Set to false for secondary datacenters"
 }
 
-variable "primary_dc" {
+variable "primary_datacenter_name" {
   description = "Primary datacenter name required by helm chart"
   default = "dc1"
 }
