@@ -5,13 +5,17 @@
 
 global:
   name: consul
-  image: "hashicorp/consul-enterprise:${consul_version}-ent"
+  image: "hashicorp/consul-enterprise:1.14.3-ent"
+  imageK8S: docker.mirror.hashicorp.services/hashicorp/consul-k8s-control-plane:1.0.2
+  imageConsulDataplane: "hashicorp/consul-dataplane:1.0.0"
   enableConsulNamespaces: true
   enterpriseLicense:
     secretName: 'consul-ent-license'
     secretKey: 'key'
     enableLicenseAutoload: true
-  datacenter: ${datacenter}
+  datacenter: consul0-eastus
+  peering:
+    enabled: true
   # TLS configures whether Consul components use TLS.
   tls:
     # TLS must be enabled for federation in Kubernetes.
@@ -33,7 +37,7 @@ global:
     autoGenerate: true
 server:
   enabled: true
-  replicas: ${server_replicas}
+  replicas: 3
 
 client:
   enabled: true
@@ -44,10 +48,9 @@ client:
 #  clusterIP: 10.0.246.247
 
 connectInject:
-  # Consul Connect service mesh must be enabled for federation.
   enabled: true
   transparentProxy:
-    defaultEnabled: true
+    defaultEnabled: false
   consulNamespaces:
     mirroringK8S: true
 

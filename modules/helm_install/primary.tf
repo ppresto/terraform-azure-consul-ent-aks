@@ -99,8 +99,7 @@ data "kubernetes_secret" "consul-bootstrap-secret" {
 }
 
 resource "kubectl_manifest" "proxy_defaults" {
-  count     = 0
-  #count     = var.primary_datacenter && var.client == false ? 1 : 0
+  count     = var.client == false ? 1 : 0
   yaml_body = <<YAML
 apiVersion: consul.hashicorp.com/v1alpha1
 kind: ProxyDefaults

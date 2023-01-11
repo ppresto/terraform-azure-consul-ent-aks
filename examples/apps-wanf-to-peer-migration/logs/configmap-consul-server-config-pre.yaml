@@ -1,0 +1,90 @@
+apiVersion: v1
+data:
+  acl-config.json: |-
+    {
+      "acl": {
+        "enabled": true,
+        "default_policy": "deny",
+        "down_policy": "extend-cache",
+        "enable_token_replication": true,
+        "enable_token_persistence": true
+      }
+    }
+  central-config.json: |-
+    {
+      "enable_central_service_config": true
+    }
+  extra-from-values.json: '{}'
+  federation-config.json: |-
+    {
+      "primary_datacenter": "consul0-eastus",
+      "primary_gateways": [],
+      "connect": {
+        "enable_mesh_gateway_wan_federation": true
+      }
+    }
+  server.json: |
+    {
+      "bind_addr": "0.0.0.0",
+      "bootstrap_expect": 3,
+      "client_addr": "0.0.0.0",
+      "connect": {
+        "enabled": true
+      },
+      "datacenter": "consul1-westus2",
+      "data_dir": "/consul/data",
+      "domain": "consul",
+      "ports": {
+        "grpc": -1,
+        "grpc_tls": 8502,
+        "serf_lan": 8301
+      },
+      "recursors": [],
+      "retry_join": ["consul-server.consul.svc:8301"],
+      "server": true
+    }
+  tls-config.json: |-
+    {
+      "tls": {
+        "internal_rpc": {
+          "verify_incoming": true,
+          "verify_server_hostname": true
+        },
+        "grpc": {
+          "verify_incoming": false
+        },
+        "defaults": {
+          "verify_outgoing": true,
+          "ca_file": "/consul/tls/ca/tls.crt",
+          "cert_file": "/consul/tls/server/tls.crt",
+          "key_file": "/consul/tls/server/tls.key"
+        }
+      },
+      "ports": {
+        "http": -1,
+        "https": 8501
+      }
+    }
+  ui-config.json: |-
+    {
+      "ui_config": {
+        "enabled": true
+      }
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: consul1-westus2
+    meta.helm.sh/release-namespace: consul
+  creationTimestamp: "2023-01-09T19:31:19Z"
+  labels:
+    app: consul
+    app.kubernetes.io/managed-by: Helm
+    chart: consul-helm
+    component: server
+    heritage: Helm
+    release: consul1-westus2
+  name: consul-server-config
+  namespace: consul
+  resourceVersion: "36235"
+  uid: 6733edf3-597e-48ae-aadb-a2279092fea9

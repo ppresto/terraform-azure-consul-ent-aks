@@ -1,6 +1,6 @@
 # Example Prerequisite Configuration for Consul on AKS Module
 
-The quickstart directory provides example code that will create two resource groups each with their own VNET, and AKS cluster along with a native cloud Vault to share secure Consul data.  This will also generate the terraform needed to run the helm-install module to install Consul on AKS clusters.
+The quickstart directory provides example code that will create two resource groups each with their own VNET, and AKS cluster along with a native cloud Vault to share secure Consul data.  This will also generate the terraform needed to run the helm-install module to install Consul in a WAN Federated model on AKS clusters.
 
 ## How to Use This Repo
 
@@ -19,14 +19,17 @@ After completing the PreReqs, copy your Consul ENT License to `./files/consul.li
 
 - `regions`              = List of regions with primary being first
 - `region_cidr_list`     = List with a CIDR block for each region
-- `resource_name_prefix` - Prefix for resource names VNet
+- `resource_name_prefix` = Prefix for resource names
+- `consul_version`       = "1.14.3-ent"
+- `enable_cluster_peering` = false
+- `consul_helm_chart_version`  = "1.0.2"
 
 The default Azure region is `East US`. If you wish to change this region,
 you may select another region from the list provided and update the `./quickstart-multiregion/my.auto.tfvars`.
 [here](https://azure.microsoft.com/en-us/global-infrastructure/geographies/#geographies).
 
 ### Sample [my.auto.tfvars](./quickstart_multiregion/my.auto.tfvars)
-Do not use in production.  This example is using a path of a cloned consul-k8s repo for `consul_chart_name`  to build a configuration that will run the latest dev helm chart not yet released.  For stability replace this path with `consul` and then define a chart version with `consul_helm_chart_version`.  Additional example my.auto.tfvar files are in `./example-tfvars`.
+Additional Peering, and ServiceDiscovery example files are in `./example-tfvars`.
 
 ```
 regions              = ["eastus", "westus2"]
@@ -34,11 +37,9 @@ region_cidr_list     = ["172.16.0.0/16", "172.17.0.0/16"]
 resource_name_prefix = "presto"
 create_consul_tf     = true
 consul_node_count    = 3
-consul_version       = "1.14.0-ent"
-consul_helm_chart_template = "values-peer-cluster-dev.yaml"  #clone consul-k8s main branch locally
-consul_client_helm_chart_template = "values-client-aks-dev.yaml"
-consul_chart_name         = "/Users/patrickpresto/Projects/consul/consul-k8s/charts/consul"
-enable_cluster_peering    = true
+consul_version       = "1.14.3-ent"
+enable_cluster_peering = false
+consul_helm_chart_version  = "1.0.2"
 ```
 ### AKS Cluster Networking
 
@@ -178,7 +179,7 @@ In the UI the upper left corner shows the consul datacenter name `consul0-eastus
 - Auth Methods: The K8s API used to authenticate consul cluster services
 Check out the default policies, roles, and tokens that were created.
 
-## WAN Federation Only - Deploy Secondary Consul clusters using Helm
+## Deploy and federate the secondary Consul cluster using Helm
 
 Run `terraform init` and `terraform apply` in `./consul-secondary` to set up secondary Consul clusters. Once this is complete, you should have two federated Consul clusters.
 ```
@@ -229,10 +230,15 @@ kubectl exec statefulset/consul-server --namespace consul -- consul catalog serv
 ## Deploy Services
 Deploy services to the default Partition, and default Namespace of the K8s cluster that is hosting Consul.  The output of the script will give the Fake Service URL.
 ```
-cd examples/apps-wanf-server-def-def
-./deploy-consul0_consul1.sh
+./examples/apps-wanf-to-peer-migration/deploy-consul0_consul1.sh
 ```
-The westus2/web.yaml is defined with a static upstream pointing to eastus/api using WAN Federation.
+The westus2/web.yaml is defined with a static upstream pointing to eastus/api.yaml using WAN Federation.
+
+## Verify ACL replication and create policies and tokens
+If clients are enabled in the helm values then replication should be enabled and running on the secondary.  Run the following script to create policies and tokens on the primary to validate on the secondary after migration.  Use the API to verify secondary replication health.  Run the following script to do this.
+```
+examples/apps-wanf-to-peer-migration/migration/create_policies.sh
+```
 
 ## Upgrade Consul Servers to support Peering
 Review the upgrade docs at https://developer.hashicorp.com/consul/docs/k8s/upgrade
@@ -245,7 +251,7 @@ helm list --filter consul --namespace consul  # get current versions to update c
 ```
 
 Update the helm values to support Peering and additional features as needed.
-`./yaml/auto-consul1-westus2-values.yaml`
+`yaml/auto-consul1-westus2-values.yaml`
 ```
 global:
 	peering:
@@ -268,17 +274,90 @@ Verify Changes
 helm plugin install https://github.com/databus23/helm-diff
 helm diff upgrade consul1-westus2 hashicorp/consul -n consul -f yaml/auto-consul1-westus2-values.yaml --version 1.0.2 | grep "has changed"
 ```
+
 Run helm upgrade to configure new values.
 ```
 helm upgrade consul1-westus2 hashicorp/consul -n consul -f yaml/auto-consul1-westus2-values.yaml --version 1.0.2
 ```
-Run the same steps on the remaining secondary clusters.
+Refresh UI and check server/connector logs for errors.  May need to reapply service defaults.
 
-Upgrade the Primary last.  Update the yaml with the same values as the secondaries in this case.
+Run the same steps on the remaining secondary clusters and do primary last.
+```
+cd ../consul-primary
+kubectl config use-context consul0
+helm upgrade consul0-eastus hashicorp/consul -n consul -f yaml/auto-consul0-eastus-values.yaml --version 1.0.2
+```
+Verify logs are clean.
+
+## Configure Peering from consul0-eastus to consul1-westus2
+
+Configure Peering to use MGW
 ```
 consul0
-cd ../consul-primary
-helm upgrade consul0-eastus hashicorp/consul -n consul -f yaml/auto-consul0-eastus-values.yaml --version 1.0.2
+examples/apps-wanf-to-peer-migration/fake-service/eastus/init-consul-config/mesh.yaml.dis
+
+consul1
+examples/apps-wanf-to-peer-migration/fake-service/westus2/init-consul-config/mesh.yaml.dis
+```
+
+Setup Acceptor, Dialer, and Exported Services
+```
+cd ..
+examples/apps-wanf-to-peer-migration/peering/peer_consul0_to_consul1.sh
+```
+
+If `State = Pending` try editing the mesh-gateway deployment to have replicas: 1. 
+```
+kc edit deploy/consul-mesh-gateway
+```
+
+## Apply WAN/Peering Failover
+Apply the Failover target rules, and then delete the local api service to verify failover works.  Comment out the peer or datacenter target to verify the other target is failover properly.
+```
+kubectl apply -f examples/apps-wanf-to-peer-migration/fake-service/westus2/traffic-mgmt.yaml.dis
+kubectl delete -f examples/apps-wanf-to-peer-migration/fake-service/westus2/api.yaml
+```
+
+## Disable WAN Federation -  TBD
+To remove WAN Federated nodes the clients must first be disabled.  Update the helm values of the secondary cluster (1.14.x) to disable clients.
+```
+cd consul-secondary
+```
+
+Update `yaml/auto-consul1-westus2-values.yaml`:
+```
+client:
+  enabled: false
+```
+
+Remove clients using helm upgrade
+```
+helm upgrade consul1-westus2 hashicorp/consul -n consul -f yaml/auto-consul1-westus2-values.yaml --version 1.0.2
+```
+
+Remove WAN Serf listening port 8302 TCP/UDP from server-statefulset pods to break WAN Federation
+```
+kubectl -n consul edit statefulset consul-server
+```
+Not sure if port needs to be removed from consul-server service too??
+
+Disable WAN Federation on secondary cluster
+```
+./examples/apps-wanf-to-peer-migration/migration/disable_wanfed.sh
+```
+
+Verify WAN Connection from primary and secondary
+```
+kubectl config use-context consul0
+kubectl exec statefulset/consul-server --namespace consul -- consul members -wan
+kubectl config use-context consul1
+kubectl exec statefulset/consul-server --namespace consul -- consul members -wan
+```
+
+Update Helm values to remove all Federation configurations and upgrade cluster.
+```
+consul1
+helm upgrade consul1-westus2 hashicorp/consul -n consul -f yaml/auto-consul1-westus2-values.yaml --version 1.0.2
 ```
 
 ## Complete

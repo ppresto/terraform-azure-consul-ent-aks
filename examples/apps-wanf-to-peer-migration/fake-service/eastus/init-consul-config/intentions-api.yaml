@@ -9,7 +9,6 @@ spec:
   sources:
   - name: "web"
     action: allow
-  #- name: web
-  #  namespace: westus2-1
-  #  partition: westus2-shared
-  #  action: allow
+  - name: "web"
+    peer: consul1-westus2
+    action: allow

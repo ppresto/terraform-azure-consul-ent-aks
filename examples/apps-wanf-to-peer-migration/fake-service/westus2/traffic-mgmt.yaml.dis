@@ -9,6 +9,7 @@ spec:
   failover:
     '*':
       targets:
+        - datacenter: consul0-eastus
         - peer: consul0-eastus
           namespace: default
           #service: api

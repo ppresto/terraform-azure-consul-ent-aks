@@ -34,6 +34,7 @@ global:
       secretKey: replicationToken
   federation:
     enabled: true
+    # After 0.41.1 helm chart these 2 values are now required to auth/fed across MGW
     k8sAuthMethodHost: ${aks_cluster}
     primaryDatacenter: ${primary_datacenter_name}
   gossipEncryption:
