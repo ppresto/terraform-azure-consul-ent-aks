@@ -68,7 +68,7 @@ data "template_file" "secondary" {
   }
 }
 resource "local_file" "secondary-tf" {
-  count    = var.create_consul_tf && var.enable_cluster_peering == false ? length(module.aks_apps.*.aks_name) : 0
+  count    = var.enable_cluster_peering == false ? length(module.aks_apps.*.aks_name) : 0
   content  = element(data.template_file.secondary.*.rendered, count.index)
   filename = "${path.module}/../consul-secondary/auto-${element(module.aks_apps.*.aks_name, count.index)}.tf"
 }
