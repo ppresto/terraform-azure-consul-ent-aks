@@ -61,7 +61,8 @@ module "key_vault" {
 }
 
 module "aks_consul" {
-  source         = "../modules/aks-kubenet/"
+  source = "../modules/aks-kubenet/"
+  #source         = "../modules/aks-cni/"
   count          = length(var.regions)
   resource_group = element(azurerm_resource_group.example.*, count.index)
   aks_subnet_id  = element(azurerm_subnet.consul.*.id, count.index)
@@ -91,9 +92,11 @@ data "template_file" "consul-terraform" {
     release_name                  = "${element(module.aks_consul.*.aks_name, count.index)}-${element(var.regions, count.index)}"
     consul_version                = var.consul_version
     consul_helm_chart_version     = var.consul_helm_chart_version
-    consul_helm_chart_template     = var.consul_helm_chart_template
+    consul_helm_chart_template    = var.consul_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
+    partition                     = "default"
+    primary_datacenter_name                    = "${element(module.aks_consul.*.aks_name, 0)}-${element(var.regions, 0)}"
   }
 }
 

@@ -15,19 +15,21 @@ resource "helm_release" "consul_client" {
   timeout          = 900
   version          = var.consul_helm_chart_version
 
-  values = [data.template_file.consul-client[0].rendered]
+  values     = [data.template_file.consul-client[0].rendered]
   depends_on = [kubernetes_namespace.consul]
 }
 data "template_file" "consul-client" {
   count    = var.client && var.enable_cluster_peering ? 1 : 0
   template = file("${path.module}/templates/${var.consul_helm_chart_template}")
   vars = {
-    consul_version  = var.consul_version
-    server_replicas = var.server_replicas
-    cluster_name    = var.cluster_name
-    datacenter      = var.datacenter
-    aks_cluster     = data.azurerm_kubernetes_cluster.cluster.kube_config.0.host
-    consul_external_servers = var.consul_external_servers
+    consul_version            = var.consul_version
+    consul_helm_chart_version = var.consul_helm_chart_version
+    server_replicas           = var.server_replicas
+    cluster_name              = var.cluster_name
+    datacenter                = var.datacenter
+    partition                 = var.consul_partition
+    aks_cluster               = data.azurerm_kubernetes_cluster.cluster.kube_config.0.host
+    consul_external_servers   = var.consul_external_servers
   }
 }
 resource "local_file" "consul-client" {

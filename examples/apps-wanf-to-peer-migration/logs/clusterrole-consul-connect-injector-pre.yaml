@@ -1,0 +1,92 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    meta.helm.sh/release-name: consul1-westus2
+    meta.helm.sh/release-namespace: consul
+  creationTimestamp: "2023-01-09T19:31:19Z"
+  labels:
+    app: consul
+    app.kubernetes.io/managed-by: Helm
+    chart: consul-helm
+    component: connect-injector
+    heritage: Helm
+    release: consul1-westus2
+  name: consul-connect-injector
+  resourceVersion: "36260"
+  uid: 9d4d5cf8-2dde-4dde-b7ee-ca260a5a91ce
+rules:
+- apiGroups:
+  - consul.hashicorp.com
+  resources:
+  - servicedefaults
+  - serviceresolvers
+  - proxydefaults
+  - meshes
+  - exportedservices
+  - servicerouters
+  - servicesplitters
+  - serviceintentions
+  - ingressgateways
+  - terminatinggateways
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - consul.hashicorp.com
+  resources:
+  - servicedefaults/status
+  - serviceresolvers/status
+  - proxydefaults/status
+  - meshes/status
+  - exportedservices/status
+  - servicerouters/status
+  - servicesplitters/status
+  - serviceintentions/status
+  - ingressgateways/status
+  - terminatinggateways/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  - secrets
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  - services
+  - namespaces
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - get
+  - list
+  - update

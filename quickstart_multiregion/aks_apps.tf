@@ -21,7 +21,8 @@ resource "azurerm_subnet" "apps" {
 
 # Create 1 AKS cluster in each apps subnet
 module "aks_apps" {
-  source         = "../modules/aks-kubenet/"
+  source = "../modules/aks-kubenet/"
+  #source         = "../modules/aks-cni/"
   count          = length(azurerm_subnet.apps.*.id)
   resource_group = element(azurerm_resource_group.example.*, count.index)
   aks_subnet_id  = element(azurerm_subnet.apps.*.id, count.index)
@@ -55,17 +56,19 @@ data "template_file" "secondary" {
     key_vault_resource_group_name = azurerm_resource_group.example[0].name
     cluster_name                  = element(module.aks_apps.*.aks_name, count.index)
     datacenter                    = "${element(module.aks_consul.*.aks_name, count.index)}-${element(var.regions, count.index)}"
+    partition                     = "default"
     release_name                  = "${element(module.aks_apps.*.aks_name, count.index)}-${element(var.regions, count.index)}"
     primary                       = var.enable_cluster_peering ? 0 : 1 # set index 1 to be a secondary consul cluster for WAN Fed.  Cluster Peering requires all clusters to be primary
     consul_version                = var.consul_version
     consul_helm_chart_version     = var.consul_helm_chart_version
-    consul_helm_chart_template     = var.consul_helm_chart_template
+    consul_helm_chart_template    = var.consul_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
+    primary_datacenter_name                    = "${element(module.aks_consul.*.aks_name, 0)}-${element(var.regions, 0)}"
   }
 }
 resource "local_file" "secondary-tf" {
-  count    = var.create_consul_tf && var.enable_cluster_peering == false ? length(module.aks_apps.*.aks_name) : 0
+  count    = var.enable_cluster_peering == false ? length(module.aks_apps.*.aks_name) : 0
   content  = element(data.template_file.secondary.*.rendered, count.index)
   filename = "${path.module}/../consul-secondary/auto-${element(module.aks_apps.*.aks_name, count.index)}.tf"
 }
@@ -88,6 +91,8 @@ data "template_file" "clients" {
     consul_helm_chart_template    = var.consul_client_helm_chart_template
     consul_chart_name             = var.consul_chart_name
     enable_cluster_peering        = var.enable_cluster_peering
+    partition                     = "${element(var.regions, count.index)}-shared"
+    #partition                     = "default"
   }
 }
 resource "local_file" "client-tf" {

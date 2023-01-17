@@ -59,7 +59,7 @@ variable "consul_client_helm_chart_template" {
   description = "Select helm chart template."
   # Supported Versions
   # default = "0.41.0" - WAN Federation
-  default     = ""
+  default = ""
 }
 
 variable "consul_version" {
@@ -78,7 +78,11 @@ variable "consul_namespace" {
   default     = "consul"
   description = "The namespace to install the release into"
 }
-
+variable "consul_partition" {
+  type        = string
+  default     = "default"
+  description = "The partition to install the release into"
+}
 variable "create_namespace" {
   type        = bool
   default     = true
@@ -94,6 +98,11 @@ variable "kubernetes_namespace" {
 variable "primary_datacenter" {
   type        = bool
   description = "If true, installs Consul with a primary datacenter configuration. Set to false for secondary datacenters"
+}
+
+variable "primary_datacenter_name" {
+  description = "Primary datacenter name required by helm chart"
+  default = "dc1"
 }
 
 variable "enable_cluster_peering" {

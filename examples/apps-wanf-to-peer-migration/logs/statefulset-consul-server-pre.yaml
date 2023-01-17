@@ -1,0 +1,247 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    meta.helm.sh/release-name: consul1-westus2
+    meta.helm.sh/release-namespace: consul
+  creationTimestamp: "2023-01-09T19:31:20Z"
+  generation: 1
+  labels:
+    app: consul
+    app.kubernetes.io/managed-by: Helm
+    chart: consul-helm
+    component: server
+    heritage: Helm
+    release: consul1-westus2
+  name: consul-server
+  namespace: consul
+  resourceVersion: "36721"
+  uid: 3fa49071-aac0-4bfa-a11a-5d5027189dd1
+spec:
+  podManagementPolicy: Parallel
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: consul
+      chart: consul-helm
+      component: server
+      hasDNS: "true"
+      release: consul1-westus2
+  serviceName: consul-server
+  template:
+    metadata:
+      annotations:
+        consul.hashicorp.com/config-checksum: fe2e60bfefe4b04d09db695efcd3a3ba5dd5037e63ab11068fa1c44beda14c0a
+        consul.hashicorp.com/connect-inject: "false"
+      creationTimestamp: null
+      labels:
+        app: consul
+        chart: consul-helm
+        component: server
+        hasDNS: "true"
+        release: consul1-westus2
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: consul
+                component: server
+                release: consul1-westus2
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - command:
+        - /bin/sh
+        - -ec
+        - |2
+
+          cp /consul/config/extra-from-values.json /consul/extra-config/extra-from-values.json
+          [ -n "${HOST_IP}" ] && sed -Ei "s|HOST_IP|${HOST_IP?}|g" /consul/extra-config/extra-from-values.json
+          [ -n "${POD_IP}" ] && sed -Ei "s|POD_IP|${POD_IP?}|g" /consul/extra-config/extra-from-values.json
+          [ -n "${HOSTNAME}" ] && sed -Ei "s|HOSTNAME|${HOSTNAME?}|g" /consul/extra-config/extra-from-values.json
+
+          exec /usr/local/bin/docker-entrypoint.sh consul agent \
+            -advertise="${ADVERTISE_IP}" \
+            -config-dir=/consul/config \
+            -encrypt="${GOSSIP_KEY}" \
+            -hcl="acl { tokens { agent = \"${ACL_REPLICATION_TOKEN}\", replication = \"${ACL_REPLICATION_TOKEN}\" } }" \
+            -config-dir=/consul/userconfig/consul-federation \
+            -config-file=/consul/extra-config/extra-from-values.json
+        env:
+        - name: ADVERTISE_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.hostIP
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: CONSUL_DISABLE_PERM_MGMT
+          value: "true"
+        - name: GOSSIP_KEY
+          valueFrom:
+            secretKeyRef:
+              key: gossipEncryptionKey
+              name: consul-federation
+        - name: CONSUL_HTTP_ADDR
+          value: https://localhost:8501
+        - name: CONSUL_CACERT
+          value: /consul/tls/ca/tls.crt
+        - name: CONSUL_LICENSE_PATH
+          value: /consul/license/key
+        - name: ACL_REPLICATION_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: replicationToken
+              name: consul-federation
+        image: hashicorp/consul-enterprise:1.14.3-ent
+        imagePullPolicy: IfNotPresent
+        name: consul
+        ports:
+        - containerPort: 8501
+          name: https
+          protocol: TCP
+        - containerPort: 8502
+          name: grpc
+          protocol: TCP
+        - containerPort: 8301
+          name: serflan-tcp
+          protocol: TCP
+        - containerPort: 8301
+          name: serflan-udp
+          protocol: UDP
+        - containerPort: 8302
+          name: serfwan-tcp
+          protocol: TCP
+        - containerPort: 8302
+          name: serfwan-udp
+          protocol: UDP
+        - containerPort: 8300
+          name: server
+          protocol: TCP
+        - containerPort: 8600
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 8600
+          name: dns-udp
+          protocol: UDP
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -ec
+            - |
+              curl -k \
+                https://127.0.0.1:8501/v1/status/leader \
+              2>/dev/null | grep -E '".+"'
+          failureThreshold: 2
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /consul/data
+          name: data-consul
+        - mountPath: /consul/config
+          name: config
+        - mountPath: /consul/extra-config
+          name: extra-config
+        - mountPath: /consul/tls/ca/
+          name: consul-ca-cert
+          readOnly: true
+        - mountPath: /consul/tls/server
+          name: consul-server-cert
+          readOnly: true
+        - mountPath: /consul/license
+          name: consul-license
+          readOnly: true
+        - mountPath: /consul/userconfig/consul-federation
+          name: userconfig-consul-federation
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 100
+      serviceAccount: consul-server
+      serviceAccountName: consul-server
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: consul-server-config
+        name: config
+      - emptyDir: {}
+        name: extra-config
+      - name: consul-ca-cert
+        secret:
+          defaultMode: 420
+          items:
+          - key: caCert
+            path: tls.crt
+          secretName: consul-federation
+      - name: consul-server-cert
+        secret:
+          defaultMode: 420
+          secretName: consul-server-cert
+      - name: consul-license
+        secret:
+          defaultMode: 420
+          secretName: consul-ent-license
+      - name: userconfig-consul-federation
+        secret:
+          defaultMode: 420
+          items:
+          - key: serverConfigJSON
+            path: config.json
+          secretName: consul-federation
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      name: data-consul
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      volumeMode: Filesystem
+    status:
+      phase: Pending
+status:
+  availableReplicas: 3
+  collisionCount: 0
+  currentReplicas: 3
+  currentRevision: consul-server-7d94564cfd
+  observedGeneration: 1
+  readyReplicas: 3
+  replicas: 3
+  updateRevision: consul-server-7d94564cfd
+  updatedReplicas: 3

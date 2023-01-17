@@ -1,0 +1,12 @@
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: ui-studio
+spec:
+  destination:
+    name: ui-studio
+  sources:
+  - name: ingress-gateway
+    namespace: default
+    action: allow

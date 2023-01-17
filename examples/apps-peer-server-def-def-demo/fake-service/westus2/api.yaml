@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: svc-studio-query
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-studio-query
+spec:
+  selector:
+    app: svc-studio-query
+  ports:
+    - port: 9091
+      targetPort: 9091
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: svc-studio-query
+  labels:
+    app: svc-studio-query
+    version: v1
+    service: fake-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: svc-studio-query
+  template:
+    metadata:
+      labels:
+        zone: westus2-1
+        app: svc-studio-query
+        service: fake-service
+      annotations:
+        consul.hashicorp.com/connect-inject: 'true'
+        consul.hashicorp.com/transparent-proxy: 'false'
+        #consul.hashicorp.com/envoy-extra-args: '--log-level debug --disable-hot-restart'
+        consul.hashicorp.com/service-tags: 'aks,v1'
+        consul.hashicorp.com/service-meta-version: 'v1'
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              zone: westus2-1
+              service: fake-service
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                - westus2-1
+      serviceAccountName: svc-studio-query
+      containers:
+        - name: svc-studio-query
+          image: nicholasjackson/fake-service:v0.21.0
+          ports:
+            - containerPort: 9091
+          env:
+            - name: 'LISTEN_ADDR'
+              value: '0.0.0.0:9091'
+            #- name: 'UPSTREAM_URIS'
+            #  value: 'grpc://currency.currency-ns:9090,http://payments.payments-ns:9090'
+            - name: 'NAME'
+              value: 'svc-studio-query-v1'
+            - name: 'MESSAGE'
+              value: 'svc-studio-query response'
+            - name: 'SERVER_TYPE'
+              value: 'http'
+            - name: 'TIMING_50_PERCENTILE'
+              value: '20ms'
+            - name: 'TIMING_90_PERCENTILE'
+              value: '30ms'
+            - name: 'TIMING_99_PERCENTILE'
+              value: '40ms'
+            - name: 'TIMING_VARIANCE'
+              value: '10'
+            - name: 'HTTP_CLIENT_APPEND_REQUEST'
+              value: 'true'
+            - name: 'TRACING_ZIPKIN'
+              value: 'http://simplest-collector.default:9411'

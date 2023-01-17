@@ -45,35 +45,35 @@ variable "create_consul_tf" {
 variable "consul_node_count" {
   description = "Consul Cluster AKS Node Count"
   #default     = 5
-  default     = 3
+  default = 3
 }
 
 variable "consul_version" {
   description = "Consul Version"
-  default     = "1.11.5"
+  default     = "1.14.0-ent"
 }
 
 variable "consul_helm_chart_version" {
-  default     = "1.14.0"
+  default = "1.0.0"
 }
 variable "consul_helm_chart_template" {
   description = "Consul Version depends on the helm chart version. Select helm chart version."
   # Supported Versions
   # default = "0.41.0" - WAN Federation
   # default = "1.13.3" - Cluster Peering
-  default     = "values-peer-cluster.yaml"
+  default = "values-peer-cluster.yaml"
 }
 variable "consul_client_helm_chart_template" {
   description = "Select helm chart template."
   # Supported Versions
   # default = "0.41.0" - WAN Federation
-  default     = "values-client-aks.yaml"
+  default = "values-client-aks.yaml"
 }
 variable "consul_chart_name" {
   description = "Consul chart name"
   # Supported Versions
   # default = "consul"
-  default     = "consul"
+  default = "consul"
 }
 variable "enable_cluster_peering" {
   description = "Set this variable to true if you want to setup all Consul clusters as primaries that support cluster peering"

@@ -1,0 +1,207 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: consul1-westus2
+    meta.helm.sh/release-namespace: consul
+  creationTimestamp: "2023-01-09T19:31:19Z"
+  generation: 1
+  labels:
+    app: consul
+    app.kubernetes.io/managed-by: Helm
+    chart: consul-helm
+    component: connect-injector
+    heritage: Helm
+    release: consul1-westus2
+  name: consul-connect-injector
+  namespace: consul
+  resourceVersion: "37022"
+  uid: 6f22fed4-6fa4-4d7d-b72b-078c4a571bf5
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: consul
+      chart: consul-helm
+      component: connect-injector
+      release: consul1-westus2
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "false"
+      creationTimestamp: null
+      labels:
+        app: consul
+        chart: consul-helm
+        component: connect-injector
+        release: consul1-westus2
+    spec:
+      containers:
+      - command:
+        - /bin/sh
+        - -ec
+        - |
+          consul-k8s-control-plane inject-connect \
+            -enable-federation \
+            -log-level=info \
+            -log-json=false \
+            -default-inject=false \
+            -consul-image="hashicorp/consul-enterprise:1.14.3-ent" \
+            -consul-dataplane-image="hashicorp/consul-dataplane:1.0.0" \
+            -consul-k8s-image="docker.mirror.hashicorp.services/hashicorp/consul-k8s-control-plane:1.0.2" \
+            -release-name="consul1-westus2" \
+            -release-namespace="consul" \
+            -resource-prefix=consul \
+            -listen=:8080 \
+            -default-enable-transparent-proxy=true \
+            -enable-cni=false \
+            -transparent-proxy-default-overwrite-probes=true \
+            -enable-consul-dns=true \
+            -default-enable-metrics=false \
+            -enable-gateway-metrics=true  \
+            -default-enable-metrics-merging=false  \
+            -default-merged-metrics-port=20100 \
+            -default-prometheus-scrape-port=20200 \
+            -default-prometheus-scrape-path="/metrics" \
+            -acl-auth-method="consul-k8s-auth-method" \
+            -allow-k8s-namespace="*" \
+            -enable-namespaces=true \
+            -consul-destination-namespace=default \
+            -enable-k8s-namespace-mirroring=true \
+            -consul-cross-namespace-acl-policy=cross-namespace-policy \
+            -tls-cert-dir=/etc/connect-injector/certs \
+            -default-envoy-proxy-concurrency=2 \
+            -init-container-memory-limit=150Mi \
+            -init-container-memory-request=25Mi \
+            -init-container-cpu-limit=50m \
+            -init-container-cpu-request=50m \
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: CONSUL_ADDRESSES
+          value: consul-server.consul.svc
+        - name: CONSUL_GRPC_PORT
+          value: "8502"
+        - name: CONSUL_HTTP_PORT
+          value: "8501"
+        - name: CONSUL_DATACENTER
+          value: consul1-westus2
+        - name: CONSUL_API_TIMEOUT
+          value: 5s
+        - name: CONSUL_USE_TLS
+          value: "true"
+        - name: CONSUL_CACERT_FILE
+          value: /consul/tls/ca/tls.crt
+        - name: CONSUL_LOGIN_AUTH_METHOD
+          value: consul-k8s-component-auth-method-consul1-westus2
+        - name: CONSUL_LOGIN_DATACENTER
+          value: consul0-eastus
+        - name: CONSUL_LOGIN_META
+          value: component=connect-injector,pod=$(NAMESPACE)/$(POD_NAME)
+        image: docker.mirror.hashicorp.services/hashicorp/consul-k8s-control-plane:1.0.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 2
+          httpGet:
+            path: /readyz/ready
+            port: 9445
+            scheme: HTTP
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: sidecar-injector
+        ports:
+        - containerPort: 8080
+          name: webhook-server
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 2
+          httpGet:
+            path: /readyz/ready
+            port: 9445
+            scheme: HTTP
+          initialDelaySeconds: 2
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 50m
+            memory: 50Mi
+          requests:
+            cpu: 50m
+            memory: 50Mi
+        startupProbe:
+          failureThreshold: 15
+          httpGet:
+            path: /readyz/ready
+            port: 9445
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 2
+          successThreshold: 1
+          timeoutSeconds: 5
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/connect-injector/certs
+          name: certs
+          readOnly: true
+        - mountPath: /consul/tls/ca
+          name: consul-ca-cert
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: consul-connect-injector
+      serviceAccountName: consul-connect-injector
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: certs
+        secret:
+          defaultMode: 420
+          secretName: consul-connect-inject-webhook-cert
+      - name: consul-ca-cert
+        secret:
+          defaultMode: 420
+          items:
+          - key: caCert
+            path: tls.crt
+          secretName: consul-federation
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2023-01-09T19:32:52Z"
+    lastUpdateTime: "2023-01-09T19:32:52Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2023-01-09T19:31:19Z"
+    lastUpdateTime: "2023-01-09T19:32:52Z"
+    message: ReplicaSet "consul-connect-injector-6689786585" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

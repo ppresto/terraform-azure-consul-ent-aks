@@ -24,8 +24,11 @@ data "template_file" "consul-secondary" {
   template = file("${path.module}/templates/${var.consul_helm_chart_template}")
   vars = {
     consul_version  = var.consul_version
+    consul_helm_chart_version = var.consul_helm_chart_version
     server_replicas = var.server_replicas
     datacenter      = var.datacenter
+    aks_cluster     = data.azurerm_kubernetes_cluster.cluster.kube_config.0.host
+    primary_datacenter_name      = var.primary_datacenter_name
   }
 }
 resource "local_file" "consul-secondary" {
@@ -35,7 +38,7 @@ resource "local_file" "consul-secondary" {
 }
 
 resource "kubernetes_secret" "consul_license_secondary" {
-  count    = var.primary_datacenter ? 0 : 1
+  count = var.primary_datacenter ? 0 : 1
   metadata {
     name      = "consul-ent-license"
     namespace = var.kubernetes_namespace
