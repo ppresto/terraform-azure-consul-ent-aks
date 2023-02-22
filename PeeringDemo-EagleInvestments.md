@@ -2,6 +2,11 @@
 
 ## Pre
 * East/West Consul UI Browser Tabs
+```
+cd .. # Go to repo base
+examples/ui/get_consul0_ui_url.sh  # Datacenter consul0-eastus
+examples/ui/get_consul1_ui_url.sh  # Datacenter consul1-westus2
+```
 * open fake-service/westus2/init-consul-config/intentions-api.yaml.dis
 * open peering-acceptor-consul0.yaml and dialer yaml
 * open serviceresolver.yaml.dis
@@ -66,7 +71,7 @@ Refresh the browser and `svc-studio-query` should still be responding, but from 
 ```
 consul1
 kubectl delete -f ./examples/apps-peer-server-def-def-demo/fake-service/westus2/init-consul-config/intentions-api.yaml.dis
-kubectl apply -f ./examples/apps-peer-server-def-def-demo/fake-service/westus2/serviceresolver.yaml.dis
+kubectl delete -f ./examples/apps-peer-server-def-def-demo/fake-service/westus2/serviceresolver.yaml.dis
 ./examples/apps-peer-server-def-def-demo/peering/peer_consul0_to_consul1.sh delete
 ./examples/apps-peer-server-def-def-demo/fake-service/deploy-consul0_consul1.sh delete
 
@@ -95,3 +100,33 @@ cd ../peering/
 
 ## Test Failover
 Failover is configured using a ServiceResolver.  This was configured as part of the service deployment for the api service running in region westus2 and zone westus2-1 [westus2-1](./examples/apps-dataplane-partition-ns/fake-service/westus2/westus2-1/traffic-mgmt.yaml)
+
+### Review Mesh gateway failover route from west to east
+```
+# Get MGW IP (West)
+consul1
+kubectl exec -it deploy/ui-studio -- curl localhost:19000/clusters
+
+# Verify Local MGW IP
+kc get po -o wide
+
+#
+kc port-forward deploy/consul-mesh-gateway 19000:19000
+
+# Review 
+kc get svc
+```
+
+### Connect - Review Peer Failover Targets
+Discovery Chain - verify protocols are all http
+```
+# use-context for westus2 consul cluster
+consul1
+
+export CONSUL_HTTP_TOKEN=$(kubectl get --namespace consul secrets/consul-bootstrap-acl-token --template={{.data.token}} | base64 -d)
+
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/svc-studio-query | jq -r
+```
+Endpoint should point to the MG on the other side
+```
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/health/connect/svc-studio-query?peer=consul0-eastus | jq -r
