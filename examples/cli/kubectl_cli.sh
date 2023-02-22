@@ -19,3 +19,8 @@ kubectl -n consul exec -it consul-server-0 -- consul members
 kubectl -n consul exec -it consul-server-0 -- consul partition list -token "${CONSUL_HTTP_TOKEN}"
 # list auth methods
 kubectl -n consul exec -it consul-server-0 -- consul acl auth-method list -token ${CONSUL_HTTP_TOKEN}
+
+# peering 
+# kc exec consul-server-0 -- consul peering generate-token -partition=eastus-shared -name=consul1-westus2 -server-external-addresses=1.2.3.4:8502 -token "${CONSUL_HTTP_TOKEN}"
+# kc exec consul-server-0 -- consul peering delete -partition=eastus-shared -name=consul1-westus2 -token "${CONSUL_HTTP_TOKEN}"
+# kc get secrets peering-token -o json | jq -r '.data["data"]="NEW_ENCODED_SECRET"' | kubectl apply -f -
