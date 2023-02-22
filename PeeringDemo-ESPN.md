@@ -107,14 +107,15 @@ Failover is configured using a ServiceResolver.  This was configured as part of 
 ### Review Mesh gateway failover route from west to east
 ```
 # Get MGW IP (West)
-consul1
-kubectl exec -it deploy/ui-studio -- curl localhost:19000/clusters
+aks1
+kubectl -n westus2-1 exec -it deploy/web -- curl localhost:19000/clusters
+
 
 # Verify Local MGW IP
 kc get po -o wide
 
 #
-kc port-forward deploy/consul-mesh-gateway 19000:19000
+kc port-forward deploy/aks1-mesh-gateway 19000:19000
 
 # Review 
 kc get svc
@@ -128,8 +129,8 @@ consul1
 
 export CONSUL_HTTP_TOKEN=$(kubectl get --namespace consul secrets/consul-bootstrap-acl-token --template={{.data.token}} | base64 -d)
 
-kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/svc-studio-query | jq -r
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api | jq -r
 ```
 Endpoint should point to the MG on the other side
 ```
-kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/health/connect/svc-studio-query?peer=consul0-eastus | jq -r
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/health/connect/api?peer=eastus-shared | jq -r
