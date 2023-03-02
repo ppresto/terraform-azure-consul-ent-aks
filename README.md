@@ -17,8 +17,6 @@
     - [Setup Peering between partitions](#setup-peering-between-partitions)
   - [Review Failover with a Service-Resolver](#review-failover-with-a-service-resolver)
   - [Failover validation](#failover-validation)
-  - [Setup Peering (eastus/westus2)](#setup-peering-eastuswestus2)
-  - [Test Failover](#test-failover)
   - [Examples](#examples)
   - [Troubleshooting](#troubleshooting)
     - [DNS Consul](#dns-consul)
@@ -232,18 +230,28 @@ kubectl apply -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/init-
 ```
 
 ### Deploy Services to aks0, aks1 clusters
-Deploy services to the East/West AKS dataplane clusters bootstrapped to Consul.
+Deploy services to the East/West AKS dataplane clusters bootstrapped to Consul.  [Deploy example services](./examples/README.md) to test out Consul service mesh.  The script below will deploy api services in westus2 across 3 namespaces on the AKS dataplane cluster.  Each of these ns runs services within a specific Availability zone.  The `api` services will also be deployed in a namespace in the eastus aks dataplane cluster.  This design will allow us to test failover across zones and regions.
 ```
 ./examples/apps-peer-dataplane-ap-ns/fake-service/deploy-with-failover.sh
 ```
-* Review Service Topology
-* Get the application URL from the script output
 
 Review Pod IP's in the 3 different Zones and verify westus2-1 is serving all traffic
 ```
 aks1
 kubectl get pods -o wide -l service=fake-service -A
 ```
+
+Use the Consul UI tabs to verify services (`web`, `api`) are being deployed correctly.
+* Datacenter (consul0-eastus)
+  * Admin Partition (eastus-shared) -> Namespace (eastus-1)
+    * 2 instances of `api` should be healthy
+* Datacenter (consul1-westus2)
+  * Admin Partition (westus2-shared) -> Namespace (westus2-1)
+    * 2 instances of both `api` and `web` should be healthy
+  * Admin Partition (westus2-shared) -> Namespace (westus2-2)
+    * 2 instances of `api` should be healthy
+  * Admin Partition (westus2-shared) -> Namespace (westus2-3)
+    * 2 instances of `api` should be healthy
 
 ### Setup Peering between partitions
 ```
@@ -281,44 +289,6 @@ kubectl delete -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/west
 kubectl get pods -o wide -l service=fake-service -A
 ```
 
-[Deploy example services](./examples/README.md) to test out Consul service mesh.  The script below will deploy api services in westus2 across 3 namespaces.  Each of these ns runs services within a specific Availability zone.  The `api` services will also be deployed in 1 zone in eastus.  This design will allow us to test failover across zones and regions.
-
-```
-cd ../examples/apps-dataplane-partition-ns/fake-service
-./deploy-with-failover.sh
-```
-
-Access the East/West Consul UIs
-```
-cd .. # Go to repo base
-examples/ui/get_consul0_ui_url.sh  # Datacenter consul0-eastus
-examples/ui/get_consul1_ui_url.sh  # Datacenter consul1-westus2
-```
-
-The application URL will be part of the output.  Copy/paste this in the brower to view the app.  This should show `web`->`api`.
-
-
-Use the Consul UI tabs to verify services (`web`, `api`) are being deployed correctly.
-* Datacenter (consul0-eastus)
-  * Admin Partition (eastus-shared) -> Namespace (eastus-1)
-    * 2 instances of `api` should be healthy
-* Datacenter (consul1-westus2)
-  * Admin Partition (westus2-shared) -> Namespace (westus2-1)
-    * 2 instances of both `api` and `web` should be healthy
-  * Admin Partition (westus2-shared) -> Namespace (westus2-2)
-    * 2 instances of `api` should be healthy
-  * Admin Partition (westus2-shared) -> Namespace (westus2-3)
-    * 2 instances of `api` should be healthy
-
-## Setup Peering (eastus/westus2)
-Peer consul0-eastus / consul1-westus2 Consul clusters allowing services to be shared across them.  This will be used for failover.
-```
-cd ../peering/
-./peer_aks0_to_aks1.sh
-```
-
-## Test Failover
-Failover is configured using a ServiceResolver.  This was configured as part of the service deployment for the api service running in region westus2 and zone westus2-1 [westus2-1](./examples/apps-dataplane-partition-ns/fake-service/westus2/westus2-1/traffic-mgmt.yaml)
 ## Examples
 Review [Examples](./examples/README.md) for scripts that show how to setup the UI, CLI, deploy sample apps, and other consul configurations.
 
