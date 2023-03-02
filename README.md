@@ -10,7 +10,13 @@
     - [Consul UI - Validate Primary Consul clusters with the UI](#consul-ui---validate-primary-consul-clusters-with-the-ui)
     - [Deploy Services to Consul's default partition and namespace](#deploy-services-to-consuls-default-partition-and-namespace)
   - [Deploy Consul to Agentless AKS clusters using Helm](#deploy-consul-to-agentless-aks-clusters-using-helm)
-  - [Deploy Services to remote AKS clusters](#deploy-services-to-remote-aks-clusters)
+  - [Setup and validate west/east Service failover across Peer](#setup-and-validate-westeast-service-failover-across-peer)
+    - [Setup Shell with aliases and AuthN to AKS](#setup-shell-with-aliases-and-authn-to-aks)
+    - [Configure default partition with mesh defaults](#configure-default-partition-with-mesh-defaults)
+    - [Deploy Services to aks0, aks1 clusters](#deploy-services-to-aks0-aks1-clusters)
+    - [Setup Peering between partitions](#setup-peering-between-partitions)
+  - [Review Failover with a Service-Resolver](#review-failover-with-a-service-resolver)
+  - [Failover validation](#failover-validation)
   - [Setup Peering (eastus/westus2)](#setup-peering-eastuswestus2)
   - [Test Failover](#test-failover)
   - [Examples](#examples)
@@ -201,13 +207,94 @@ The helm values used to deploy the Consul dataplane created a new partition and 
 
 At this point, the Namespace drop down menu will only have the default.  This is because we haven't started any services in the AKS cluster within its own K8s namespace.  Once we start services in their own k8s namespace Consul will automatically create a 1/1 Consul namespace for the service providing it with extra adminstrative and service mesh capabilities.
 
-## Deploy Services to remote AKS clusters
-The Consul cluster and a remote dataplane (AKS east/west app cluster) is setup in each reagion (eastus, westus2) and ready to register services.  [Deploy example services](./examples/README.md) to test out Consul service mesh.  The script below will deploy api services in westus2 across 3 namespaces.  Each of these ns runs services within a specific Availability zone.  The `api` services will also be deployed in 1 zone in eastus.  This design will allow us to test failover across zones and regions.
+## Setup and validate west/east Service failover across Peer
+The Consul cluster and a remote dataplane (AKS east/west app cluster) are setup in each reagion (eastus, westus2).  
+* Setup your shell env and aks authN 
+* Configure the mesh defaults for peering
+* Deploy services into their own partition and namespaces
+* Establish a peering relationship for failover
+* Validate failover  
+
+### Setup Shell with aliases and AuthN to AKS
+Connect to the AKS cluster and verify you can use kubectl.  source this script in your shell for AKS contexts and namespace aliases.
+```
+cd ../quickstart_multiregion
+source kubectl_connect.sh
+cd ..
+```
+### Configure default partition with mesh defaults
+default partition manages the mesh defaults for other partitions.  Set this to peer through meshgateways.
+```
+consul0 
+kubectl apply -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/init-consul-config/mesh.yaml.disable
+consul1
+kubectl apply -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/init-consul-config/mesh.yaml.disable
+```
+
+### Deploy Services to aks0, aks1 clusters
+Deploy services to the East/West AKS dataplane clusters bootstrapped to Consul.
+```
+./examples/apps-peer-dataplane-ap-ns/fake-service/deploy-with-failover.sh
+```
+* Review Service Topology
+* Get the application URL from the script output
+
+Review Pod IP's in the 3 different Zones and verify westus2-1 is serving all traffic
+```
+aks1
+kubectl get pods -o wide -l service=fake-service -A
+```
+
+### Setup Peering between partitions
+```
+./examples/apps-peer-dataplane-ap-ns/peering/peer_aks0_to_aks1.sh
+```
+Review Peering and Services in UI
+
+## Review Failover with a [Service-Resolver](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-resolver#filter-on-service-version)
+```
+aks1
+kubectl apply -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/westus2-1/traffic-mgmt.yaml
+```
+
+In the UI (consul1-westus2) go to Services->api->routing and you should see the Peer failover target (consul0-eastus).  This means everything is setup for regional failover.  
+
+## Failover validation
+Test Zone 2 Failover. Delete the local api service running in westus2-1.
+```
+aks1
+kubectl delete -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/westus2-1/api-westus2-1.yaml
+kubectl get pods -o wide -l service=fake-service -A
+```
+
+Test Zone 3 Failover. Delete the local api service running in westus2-2.
+```
+aks1
+kubectl delete -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/westus2-2/api-westus2-2.yaml
+kubectl get pods -o wide -l service=fake-service -A
+```
+
+Test Regional Peering Failover. Delete the local api service running in westus2-3 (Not WORKING in 1.14.4)
+```
+aks1
+kubectl delete -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/westus2-3/api-westus2-3.yaml
+kubectl get pods -o wide -l service=fake-service -A
+```
+
+[Deploy example services](./examples/README.md) to test out Consul service mesh.  The script below will deploy api services in westus2 across 3 namespaces.  Each of these ns runs services within a specific Availability zone.  The `api` services will also be deployed in 1 zone in eastus.  This design will allow us to test failover across zones and regions.
 
 ```
 cd ../examples/apps-dataplane-partition-ns/fake-service
 ./deploy-with-failover.sh
 ```
+
+Access the East/West Consul UIs
+```
+cd .. # Go to repo base
+examples/ui/get_consul0_ui_url.sh  # Datacenter consul0-eastus
+examples/ui/get_consul1_ui_url.sh  # Datacenter consul1-westus2
+```
+
 The application URL will be part of the output.  Copy/paste this in the brower to view the app.  This should show `web`->`api`.
 
 
