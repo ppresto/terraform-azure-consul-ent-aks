@@ -118,7 +118,9 @@ kc get svc
 ```
 
 ### Connect - Review Peer Failover Targets
-Discovery Chain - verify protocols are all http
+Discovery Chain - verify protocols are all http.  
+
+HOw do you check partitions?
 ```
 # use-context for westus2 consul cluster
 consul1
@@ -128,6 +130,8 @@ export CONSUL_HTTP_TOKEN=$(kubectl get --namespace consul secrets/consul-bootstr
 kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api | jq -r
 
 kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api?ns=westus2-1 | jq -r
+
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api?ns=westus2-1?partition=westus2-shared | jq -r
 
 # from consul0-eastus DC
 kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api?ns=eastus-1?compile-dc=consul0-eastus | jq -r

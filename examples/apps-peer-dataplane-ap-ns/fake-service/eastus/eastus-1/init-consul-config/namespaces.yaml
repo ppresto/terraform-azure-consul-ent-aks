@@ -5,3 +5,10 @@ metadata:
   name: eastus-1
   labels:
     name: eastus-1
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: westus2-1
+  labels:
+    name: westus2-1
