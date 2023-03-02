@@ -7,3 +7,4 @@ spec:
     protocol: http
   meshGateway:
     mode: 'local'
+    #mode: 'remote'

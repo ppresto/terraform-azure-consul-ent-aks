@@ -66,6 +66,13 @@ kubectl get pods -o wide -l service=fake-service
 
 Refresh the browser and `svc-studio-query` should still be responding, but from a different set of IP's.  These IP's are now coming from eastus.  This validates regional failover.  
 
+To repeat this failover test re-deploy the service in the west.
+```
+consul1
+kubectl apply -f ./examples/apps-peer-server-def-def-demo/fake-service/westus2/api.yaml
+kubectl get pods -o wide -l service=fake-service
+```
+
 ## Cleanup
 
 ```

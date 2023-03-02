@@ -14,7 +14,7 @@ examples/ui/get_consul1_ui_url.sh  # Datacenter consul1-westus2
 ## Configure default partition
 default partition manages the mesh defaults for other partitions.  Set this to peer through meshgateways.
 ```
-consul0
+consul0 
 kubectl apply -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/init-consul-config/mesh.yaml.disable
 consul1
 kubectl apply -f ./examples/apps-peer-dataplane-ap-ns/fake-service/westus2/init-consul-config/mesh.yaml.disable
@@ -126,6 +126,11 @@ consul1
 export CONSUL_HTTP_TOKEN=$(kubectl get --namespace consul secrets/consul-bootstrap-acl-token --template={{.data.token}} | base64 -d)
 
 kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api | jq -r
+
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api?ns=westus2-1 | jq -r
+
+# from consul0-eastus DC
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET https://localhost:8501/v1/discovery-chain/api?ns=eastus-1?compile-dc=consul0-eastus | jq -r
 ```
 Endpoint should point to the MG on the other side (not working)
 ```
