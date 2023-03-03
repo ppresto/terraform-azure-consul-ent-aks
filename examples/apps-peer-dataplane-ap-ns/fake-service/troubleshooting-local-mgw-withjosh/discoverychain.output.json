@@ -1,0 +1,60 @@
+kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: ${CONSUL_HTTP_TOKEN}" --request GET "https://localhost:8501/v1/discovery-chain/api?ns=westus2-1&partition=westus2-shared" | jq -r
+{
+  "Chain": {
+    "ServiceName": "api",
+    "Namespace": "westus2-1",
+    "Partition": "westus2-shared",
+    "Datacenter": "consul1-westus2",
+    "Protocol": "http",
+    "StartNode": "resolver:api.westus2-1.westus2-shared.consul1-westus2",
+    "Nodes": {
+      "resolver:api.westus2-1.westus2-shared.consul1-westus2": {
+        "Type": "resolver",
+        "Name": "api.westus2-1.westus2-shared.consul1-westus2",
+        "Resolver": {
+          "ConnectTimeout": "5s",
+          "Target": "api.westus2-1.westus2-shared.consul1-westus2",
+          "Failover": {
+            "Targets": [
+              "api.westus2-1.default.external.eastus-shared"
+            ]
+          }
+        }
+      }
+    },
+    "Targets": {
+      "api.westus2-1.default.external.eastus-shared": {
+        "ConnectTimeout": "5s",
+        "ID": "api.westus2-1.default.external.eastus-shared",
+        "Service": "api",
+        "Namespace": "westus2-1",
+        "Partition": "default",
+        "Peer": "eastus-shared",
+        "MeshGateway": {},
+        "Subset": {},
+        "TransparentProxy": {}
+      },
+      "api.westus2-1.westus2-shared.consul1-westus2": {
+        "ConnectTimeout": "5s",
+        "ID": "api.westus2-1.westus2-shared.consul1-westus2",
+        "Service": "api",
+        "Namespace": "westus2-1",
+        "Partition": "westus2-shared",
+        "Datacenter": "consul1-westus2",
+        "MeshGateway": {
+          "Mode": "local"
+        },
+        "Subset": {},
+        "TransparentProxy": {},
+        "SNI": "api.westus2-1.westus2-shared.consul1-westus2.internal-v1.985445d0-2300-c1a1-f980-7c42d66a5bbb.consul",
+        "Name": "api.westus2-1.westus2-shared.consul1-westus2.internal-v1.985445d0-2300-c1a1-f980-7c42d66a5bbb.consul"
+      }
+    }
+  }
+}
+
+
+
+kc logs consul-server-0 | grep web | grep -i error
+2023-03-03T17:29:59.433Z [ERROR] agent.proxycfg: Failed to handle update from watch: kind=connect-proxy proxy=westus2-shared/westus2-1/web-59447ddcfc-mzsdc-web-sidecar-proxy service_id=westus2-shared/westus2-1/web-59447ddcfc-mzsdc-web-sidecar-proxy id=peer-trust-bundle:eastus-shared error="error filling agent cache: Permission denied: token with AccessorID '7ef46af4-759c-79cf-ca2f-8ecc7ef5dd78' lacks permission 'service:write' on \"any service\" in partition \"default\" in namespace \"default\""
+

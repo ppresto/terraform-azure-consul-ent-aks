@@ -14,6 +14,6 @@ spec:
         # - namespace: westus2-3
         #   service: api
         - peer: eastus-shared
-          namespace: eastus-1
+          namespace: westus2-1
           service: api
 
