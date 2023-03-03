@@ -58,3 +58,21 @@ kubectl -n consul exec -it consul-server-0 -- curl -k --header "X-Consul-Token: 
 kc logs consul-server-0 | grep web | grep -i error
 2023-03-03T17:29:59.433Z [ERROR] agent.proxycfg: Failed to handle update from watch: kind=connect-proxy proxy=westus2-shared/westus2-1/web-59447ddcfc-mzsdc-web-sidecar-proxy service_id=westus2-shared/westus2-1/web-59447ddcfc-mzsdc-web-sidecar-proxy id=peer-trust-bundle:eastus-shared error="error filling agent cache: Permission denied: token with AccessorID '7ef46af4-759c-79cf-ca2f-8ecc7ef5dd78' lacks permission 'service:write' on \"any service\" in partition \"default\" in namespace \"default\""
 
+# Consul Token Policy
+
+partition "westus2-shared" {
+  namespace "westus2-1" {
+    service "web" {
+	    policy = "write"
+    }
+    service "web-sidecar-proxy" {
+	    policy = "write"
+    }
+    service_prefix "" {
+	    policy = "read"
+    }
+    node_prefix "" {
+	    policy = "read"
+    }
+  }
+}
