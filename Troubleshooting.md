@@ -95,8 +95,8 @@ kubectl -n consul get secret consul-bootstrap-acl-token --context consul0 -o yam
 kubectl -n consul get secret consul-ca-cert --context consul0 -o yaml \
 | kubectl apply --context aks0 -f -
 
-helm -n consul install aks0-eastus hashicorp/consul --version 1.0.1 -f yaml/auto-aks0-eastus-values.yaml
-
+helm -n consul install aks0-eastus hashicorp/consul --version 1.0.2 -f yaml/auto-aks0-eastus-values.yaml
+helm -n consul install aks0-eastus hashicorp/consul --version 1.0.2 -f yaml/auto-aks0-eastus-values.yaml
 # helm -n consul uninstall aks0-eastus
 # consul-k8s uninstall -auto-approve -wipe-data
 ```

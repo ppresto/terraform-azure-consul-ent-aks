@@ -9,11 +9,11 @@ spec:
   failover:
     '*':
       targets:
-        # - namespace: westus2-2
-        #   service: api
-        # - namespace: westus2-3
-        #   service: api
+        - namespace: westus2-2
+          service: api
+        - namespace: westus2-3
+          service: api
         - peer: eastus-shared
-          namespace: westus2-1
+          namespace: eastus-1
           service: api
 

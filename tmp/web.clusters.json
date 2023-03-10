@@ -1,0 +1,557 @@
+{
+ "cluster_statuses": [
+  {
+   "name": "failover-target~c225dc1c~api.westus2-1.westus2-shared.consul1-westus2.internal-v1.f9b0651c-46d6-82e0-bd3f-17ca0b703f59.consul",
+   "added_via_api": true,
+   "host_statuses": [
+    {
+     "address": {
+      "socket_address": {
+       "address": "10.244.5.23",
+       "port_value": 20000
+      }
+     },
+     "stats": [
+      {
+       "name": "cx_connect_fail"
+      },
+      {
+       "value": "2",
+       "name": "cx_total"
+      },
+      {
+       "name": "rq_error"
+      },
+      {
+       "value": "2",
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "value": "2",
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "value": "2",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    },
+    {
+     "address": {
+      "socket_address": {
+       "address": "10.244.5.24",
+       "port_value": 20000
+      }
+     },
+     "stats": [
+      {
+       "name": "cx_connect_fail"
+      },
+      {
+       "value": "1",
+       "name": "cx_total"
+      },
+      {
+       "name": "rq_error"
+      },
+      {
+       "value": "1",
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "value": "1",
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "value": "1",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    }
+   ],
+   "circuit_breakers": {
+    "thresholds": [
+     {
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     },
+     {
+      "priority": "HIGH",
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     }
+    ]
+   },
+   "observability_name": "failover-target~c225dc1c~api.westus2-1.westus2-shared.consul1-westus2.internal-v1.f9b0651c-46d6-82e0-bd3f-17ca0b703f59.consul"
+  },
+  {
+   "name": "failover-target~c225dc1c~api.eastus-1.eastus-shared.external.d8c4dec3-aebd-b63a-c606-6781c47c1e6a.consul",
+   "added_via_api": true,
+   "host_statuses": [
+    {
+     "address": {
+      "socket_address": {
+       "address": "10.244.4.16",
+       "port_value": 8443
+      }
+     },
+     "stats": [
+      {
+       "value": "25",
+       "name": "cx_connect_fail"
+      },
+      {
+       "value": "25",
+       "name": "cx_total"
+      },
+      {
+       "value": "25",
+       "name": "rq_error"
+      },
+      {
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    }
+   ],
+   "circuit_breakers": {
+    "thresholds": [
+     {
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     },
+     {
+      "priority": "HIGH",
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     }
+    ]
+   },
+   "observability_name": "failover-target~c225dc1c~api.eastus-1.eastus-shared.external.d8c4dec3-aebd-b63a-c606-6781c47c1e6a.consul"
+  },
+  {
+   "name": "failover-target~c225dc1c~api.westus2-2.westus2-shared.consul1-westus2.internal-v1.f9b0651c-46d6-82e0-bd3f-17ca0b703f59.consul",
+   "added_via_api": true,
+   "host_statuses": [
+    {
+     "address": {
+      "socket_address": {
+       "address": "10.244.3.20",
+       "port_value": 20000
+      }
+     },
+     "stats": [
+      {
+       "name": "cx_connect_fail"
+      },
+      {
+       "name": "cx_total"
+      },
+      {
+       "name": "rq_error"
+      },
+      {
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    },
+    {
+     "address": {
+      "socket_address": {
+       "address": "10.244.3.19",
+       "port_value": 20000
+      }
+     },
+     "stats": [
+      {
+       "name": "cx_connect_fail"
+      },
+      {
+       "name": "cx_total"
+      },
+      {
+       "name": "rq_error"
+      },
+      {
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    }
+   ],
+   "circuit_breakers": {
+    "thresholds": [
+     {
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     },
+     {
+      "priority": "HIGH",
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     }
+    ]
+   },
+   "observability_name": "failover-target~c225dc1c~api.westus2-2.westus2-shared.consul1-westus2.internal-v1.f9b0651c-46d6-82e0-bd3f-17ca0b703f59.consul"
+  },
+  {
+   "name": "local_app",
+   "added_via_api": true,
+   "host_statuses": [
+    {
+     "address": {
+      "socket_address": {
+       "address": "127.0.0.1",
+       "port_value": 9090
+      }
+     },
+     "stats": [
+      {
+       "name": "cx_connect_fail"
+      },
+      {
+       "value": "49",
+       "name": "cx_total"
+      },
+      {
+       "value": "25",
+       "name": "rq_error"
+      },
+      {
+       "value": "24",
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "value": "49",
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    }
+   ],
+   "circuit_breakers": {
+    "thresholds": [
+     {
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     },
+     {
+      "priority": "HIGH",
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     }
+    ]
+   },
+   "observability_name": "local_app"
+  },
+  {
+   "name": "consul-dataplane",
+   "host_statuses": [
+    {
+     "address": {
+      "socket_address": {
+       "address": "127.0.0.1",
+       "port_value": 32805
+      }
+     },
+     "stats": [
+      {
+       "name": "cx_connect_fail"
+      },
+      {
+       "value": "1",
+       "name": "cx_total"
+      },
+      {
+       "name": "rq_error"
+      },
+      {
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "value": "1",
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "value": "1",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "value": "1",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    }
+   ],
+   "circuit_breakers": {
+    "thresholds": [
+     {
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     },
+     {
+      "priority": "HIGH",
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     }
+    ]
+   },
+   "observability_name": "consul-dataplane"
+  },
+  {
+   "name": "failover-target~c225dc1c~api.westus2-3.westus2-shared.consul1-westus2.internal-v1.f9b0651c-46d6-82e0-bd3f-17ca0b703f59.consul",
+   "added_via_api": true,
+   "host_statuses": [
+    {
+     "address": {
+      "socket_address": {
+       "address": "10.244.4.22",
+       "port_value": 20000
+      }
+     },
+     "stats": [
+      {
+       "name": "cx_connect_fail"
+      },
+      {
+       "name": "cx_total"
+      },
+      {
+       "name": "rq_error"
+      },
+      {
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    },
+    {
+     "address": {
+      "socket_address": {
+       "address": "10.244.4.21",
+       "port_value": 20000
+      }
+     },
+     "stats": [
+      {
+       "name": "cx_connect_fail"
+      },
+      {
+       "name": "cx_total"
+      },
+      {
+       "name": "rq_error"
+      },
+      {
+       "name": "rq_success"
+      },
+      {
+       "name": "rq_timeout"
+      },
+      {
+       "name": "rq_total"
+      },
+      {
+       "type": "GAUGE",
+       "name": "cx_active"
+      },
+      {
+       "type": "GAUGE",
+       "name": "rq_active"
+      }
+     ],
+     "health_status": {
+      "eds_health_status": "HEALTHY"
+     },
+     "weight": 1,
+     "locality": {}
+    }
+   ],
+   "circuit_breakers": {
+    "thresholds": [
+     {
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     },
+     {
+      "priority": "HIGH",
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     }
+    ]
+   },
+   "observability_name": "failover-target~c225dc1c~api.westus2-3.westus2-shared.consul1-westus2.internal-v1.f9b0651c-46d6-82e0-bd3f-17ca0b703f59.consul"
+  },
+  {
+   "name": "c225dc1c~api.westus2-1.westus2-shared.consul1-westus2.internal-v1.f9b0651c-46d6-82e0-bd3f-17ca0b703f59.consul",
+   "added_via_api": true,
+   "circuit_breakers": {
+    "thresholds": [
+     {
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     },
+     {
+      "priority": "HIGH",
+      "max_connections": 1024,
+      "max_pending_requests": 1024,
+      "max_requests": 1024,
+      "max_retries": 3
+     }
+    ]
+   },
+   "observability_name": "c225dc1c~api.westus2-1.westus2-shared.consul1-westus2.internal-v1.f9b0651c-46d6-82e0-bd3f-17ca0b703f59.consul"
+  }
+ ]
+}

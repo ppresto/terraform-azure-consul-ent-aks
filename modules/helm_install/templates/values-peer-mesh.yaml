@@ -1,6 +1,7 @@
 global:
   name: consul
-  image: "hashicorp/consul-enterprise:${consul_version}"
+  #image: "hashicorp/consul-enterprise:${consul_version}"
+  image: "ndhanushkodi/consul-ent-dev:partitionfailover"
   imageK8S: docker.mirror.hashicorp.services/hashicorp/consul-k8s-control-plane:${consul_helm_chart_version}
   imageConsulDataplane: "hashicorp/consul-dataplane:1.0.0"
   enableConsulNamespaces: true
